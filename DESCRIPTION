@@ -1,0 +1,12 @@
+Package: DFplyr
+Title: A `DataFrame` (`S4Vectors`) backend for `dplyr`
+Version: 0.0.1.9000
+Authors@R: person("Jonathan", "Carroll", 
+ email = "rpkg@jcarroll.com.au", 
+ role = c("aut", "cre"), 
+ comment = c(ORCID = "0000-0002-1404-5264"))
+Maintainer: Jonathan Carroll <rpkg@jcarroll.com.au>
+Description: Provides a backend to `dplyr` supporting `S4Vectors::DataFrame`
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
