@@ -80,8 +80,6 @@ print.src_DF <- function(x, ...) {
   S4Vectors::show(x)
 }
 
-
-
 setClass("src_DF", representation("VIRTUAL"))
 setMethod("show", "src_DF", function(object) .show_src_DF(object))
 

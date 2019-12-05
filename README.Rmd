@@ -1,0 +1,71 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+# DFplyr
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of DFplyr is to enable `dplyr` support for `S4Vectors::DataFrame`.
+
+## Installation
+
+You can install the development version from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("jonocarroll/DFplyr")
+```
+## Examples
+
+```{r}
+suppressPackageStartupMessages({
+  library(S4Vectors)
+  library(dplyr)
+  library(DFplyr)
+})
+
+m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
+DF <- as(m, "DataFrame")
+DF
+
+d <- add_dplyr_compat(DF)
+d
+
+mutate(d, newvar = cyl + hp)
+
+mutate_at(d, vars(starts_with("c")), ~.^2)
+
+group_by(d, cyl, am)
+
+group_by(d, cyl, am) %>%
+  tally(gear)
+
+count(d, gear, am, cyl)
+
+select(d, am, cyl)
+
+select(d, am, cyl) %>%
+  rename(foo = am)
+
+arrange(d, desc(hp))
+
+rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
+  add_dplyr_compat() %>%
+  distinct()
+
+# filter(d, am == 0) ## broken
+
+slice(d, 3:6)
+```
