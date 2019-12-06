@@ -215,25 +215,53 @@ arrange(d, desc(hp))
 #> Maserati Bora             4        62         0         4     146.7
 #> Volvo 142E                4        52         1         4      75.7
 
+## row names are not preserved as there may be duplicates
 rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
   add_dplyr_compat() %>%
   distinct()
 #> dplyr-compatible DataFrame with 28 rows and 5 columns
+#>           cyl        hp        am      gear      disp
+#>     <numeric> <numeric> <numeric> <numeric> <numeric>
+#> 1           6       110         1         4       160
+#> 2           4        93         1         4       108
+#> 3           6       110         0         3       258
+#> 4           8       175         0         3       360
+#> 5           6       105         0         3       225
+#> ...       ...       ...       ...       ...       ...
+#> 24          4       113         1         5      95.1
+#> 25          8       264         1         5       351
+#> 26          6       175         1         5       145
+#> 27          8       335         1         5       301
+#> 28          4       109         1         4       121
+
+filter(d, am == 0) 
+#> dplyr-compatible DataFrame with 19 rows and 6 columns
 #>                         cyl        hp        am      gear      disp
 #>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> MyCar                     6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
 #> Hornet 4 Drive            6       110         0         3       258
 #> Hornet Sportabout         8       175         0         3       360
 #> Valiant                   6       105         0         3       225
+#> Duster 360                8       245         0         3       360
+#> Merc 240D                 4        62         0         4     146.7
 #> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-
-# filter(d, am == 0) ## broken
+#> Toyota Corona             4        97         0         3     120.1
+#> Dodge Challenger          8       150         0         3       318
+#> AMC Javelin               8       150         0         3       304
+#> Camaro Z28                8       245         0         3       350
+#> Pontiac Firebird          8       175         0         3       400
+#>                       rowid
+#>                   <integer>
+#> Hornet 4 Drive            4
+#> Hornet Sportabout         5
+#> Valiant                   6
+#> Duster 360                7
+#> Merc 240D                 8
+#> ...                     ...
+#> Toyota Corona            21
+#> Dodge Challenger         22
+#> AMC Javelin              23
+#> Camaro Z28               24
+#> Pontiac Firebird         25
 
 slice(d, 3:6)
 #> dplyr-compatible DataFrame with 4 rows and 5 columns

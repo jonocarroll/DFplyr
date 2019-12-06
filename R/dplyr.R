@@ -90,13 +90,11 @@ dplyr::filter
 filter.src_DF <- function(.data, ..., .preserve = FALSE) {
   rn <- rownames(.data$x)
   t <- convert_with_group(.data)
-  identifiers <- apply(.data$x, 1, digest::digest)
+  t$rowid <- seq_len(nrow(t))
   tf <- dplyr::filter(t, ..., .preserve = .preserve)
-  subset_identifiers <- apply(tf, 1, digest::digest)
   tDF <- as(tf, "DataFrame")
-  newrn <- identifiers[identifiers %in% subset_identifiers]
-  newrn <- newrn[!duplicated(newrn)]
-  rownames(tDF) <- names(newrn)
+  rownames(tDF) <- rn[tf$rowid]
+  t$rowid <- NULL
   add_dplyr_compat(tDF)
 }
 
@@ -231,17 +229,10 @@ arrange.src_DF <- function(.data, ...) {
 #' @export
 dplyr::distinct
 #' @export
-#' @importFrom digest digest
 distinct.src_DF <- function(.data, ..., .keep_all = FALSE) {
-  rn <- rownames(.data$x)
   t <- convert_with_group(.data)
-  identifiers <- apply(.data$x, 1, digest::digest)
   td <- dplyr::distinct(t, ..., .keep_all = .keep_all)
-  subset_identifiers <- apply(td, 1, digest::digest)
   tDF <- as(td, "DataFrame")
-  newrn <- identifiers[identifiers %in% subset_identifiers]
-  newrn <- newrn[!duplicated(newrn)]
-  rownames(tDF) <- names(newrn)
   add_dplyr_compat(tDF)
 }
 

@@ -61,11 +61,12 @@ select(d, am, cyl) %>%
 
 arrange(d, desc(hp))
 
+## row names are not preserved as there may be duplicates
 rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
   add_dplyr_compat() %>%
   distinct()
 
-# filter(d, am == 0) ## broken
+filter(d, am == 0) 
 
 slice(d, 3:6)
 ```
