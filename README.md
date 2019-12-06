@@ -215,7 +215,7 @@ arrange(d, desc(hp))
 #> Maserati Bora             4        62         0         4     146.7
 #> Volvo 142E                4        52         1         4      75.7
 
-## row names are not preserved as there may be duplicates
+## row names are not preserved as there may be duplicates 
 rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
   add_dplyr_compat() %>%
   distinct()
@@ -235,7 +235,7 @@ rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
 #> 28          4       109         1         4       121
 
 filter(d, am == 0) 
-#> dplyr-compatible DataFrame with 19 rows and 6 columns
+#> dplyr-compatible DataFrame with 19 rows and 5 columns
 #>                         cyl        hp        am      gear      disp
 #>                   <numeric> <numeric> <numeric> <numeric> <numeric>
 #> Hornet 4 Drive            6       110         0         3       258
@@ -249,19 +249,6 @@ filter(d, am == 0)
 #> AMC Javelin               8       150         0         3       304
 #> Camaro Z28                8       245         0         3       350
 #> Pontiac Firebird          8       175         0         3       400
-#>                       rowid
-#>                   <integer>
-#> Hornet 4 Drive            4
-#> Hornet Sportabout         5
-#> Valiant                   6
-#> Duster 360                7
-#> Merc 240D                 8
-#> ...                     ...
-#> Toyota Corona            21
-#> Dodge Challenger         22
-#> AMC Javelin              23
-#> Camaro Z28               24
-#> Pontiac Firebird         25
 
 slice(d, 3:6)
 #> dplyr-compatible DataFrame with 4 rows and 5 columns

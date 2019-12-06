@@ -61,7 +61,7 @@ select(d, am, cyl) %>%
 
 arrange(d, desc(hp))
 
-## row names are not preserved as there may be duplicates
+## row names are not preserved as there may be duplicates 
 rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
   add_dplyr_compat() %>%
   distinct()

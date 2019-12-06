@@ -94,7 +94,7 @@ filter.src_DF <- function(.data, ..., .preserve = FALSE) {
   tf <- dplyr::filter(t, ..., .preserve = .preserve)
   tDF <- as(tf, "DataFrame")
   rownames(tDF) <- rn[tf$rowid]
-  t$rowid <- NULL
+  tDF$rowid <- NULL
   add_dplyr_compat(tDF)
 }
 
