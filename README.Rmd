@@ -70,3 +70,10 @@ filter(d, am == 0)
 
 slice(d, 3:6)
 ```
+
+`ggplot2` support is also enabled
+
+```{r}
+library(ggplot2)
+ggplot(d, aes(disp, cyl)) + geom_point()
+```

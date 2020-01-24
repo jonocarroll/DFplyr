@@ -259,3 +259,12 @@ slice(d, 3:6)
 #> Hornet Sportabout         8       175         0         3       360
 #> Valiant                   6       105         0         3       225
 ```
+
+`ggplot2` support is also enabled
+
+``` r
+library(ggplot2)
+ggplot(d, aes(disp, cyl)) + geom_point()
+```
+
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
