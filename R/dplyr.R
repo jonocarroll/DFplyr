@@ -38,56 +38,18 @@
 #' filter(d, am == 0)
 #'
 #' slice(d, 3:6)
-add_dplyr_compat <- function(x) {
-  if (inherits(x, "DataFrame"))
-    dplyr::src(subclass = "DF", x = x)
-  else
-    x
-}
-
-
-#' Drop support as a `dplyr` backend
-#'
-#' In case something goes awry, this function can be used
-#' to revert bak to just `S4Vectors::DataFrame` without `dplyr`
-#' support.
-#'
-#' @param x A `S4Vectors::DataFrame` object
-#'
-#' @md
-#' @export
-#' @examples
-#' library(S4Vectors)
-#' library(dplyr)
-#'
-#' DF <- as(mtcars, "DataFrame")
-#' d <- add_dplyr_compat(DF)
-#' d
-#'
-#' drop_dplyr_compat(d)
-drop_dplyr_compat <- function(x) {
-  x$x
-}
 
 #' @export
-format.src_DF <- function(x, ...) {
+format.DataFrame <- function(x, ...) {
   x
 }
-
-#' @importFrom S4Vectors show
-#' @export
-print.src_DF <- function(x, ...) {
-  S4Vectors::show(x)
-}
-
-setClass("src_DF", representation("VIRTUAL"))
-setMethod("show", "src_DF", function(object) .show_src_DF(object))
+setMethod("format", "DataFrame", format.DataFrame)
 
 #' @export
 dplyr::filter
 #' @importFrom digest digest
 #' @export
-filter.src_DF <- function(.data, ..., .preserve = FALSE) {
+filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
   rn <- rownames(.data$x)
   t <- convert_with_group(.data)
   t$rowid <- seq_len(nrow(t))
@@ -95,91 +57,113 @@ filter.src_DF <- function(.data, ..., .preserve = FALSE) {
   tDF <- as(tf, "DataFrame")
   rownames(tDF) <- rn[tf$rowid]
   tDF$rowid <- NULL
-  add_dplyr_compat(tDF)
+  as(tDF, "DataFrame")
 }
+setMethod("filter", "DataFrame", filter.DataFrame)
 
 #' @export
 dplyr::mutate
 #' @export
-mutate.src_DF <- function(.data, ...) {
-  rn <- rownames(.data$x)
+mutate.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   tm <- dplyr::mutate(t, ...)
-  tDF <- as(tm, "DataFrame")
-  rownames(tDF) <- rn
-  add_dplyr_compat(tDF)
+  restore_DF(tm, rownames(.data))
 }
+setMethod("mutate", "DataFrame", mutate.DataFrame)
 
 #' @export
 dplyr::tbl_vars
 #' @export
-tbl_vars.src_DF <- function(x) {
-  names(x$x)
+tbl_vars.DataFrame <- function(x) {
+  names(x)
 }
+setMethod("tbl_vars", "DataFrame", tbl_vars.DataFrame)
 
 #' @export
 dplyr::select
 #' @export
-select.src_DF <- function(.data, ...) {
-  rn <- rownames(.data$x)
+select.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
-  tm <- dplyr::select(t, ...)
-  tDF <- as(tm, "DataFrame")
-  rownames(tDF) <- rn
-  add_dplyr_compat(tDF)
+  ts <- dplyr::select(t, ...)
+  restore_DF(ts, rownames(.data))
 }
+setMethod("select", "DataFrame", select.DataFrame)
 
 #' @export
 dplyr::rename
 #' @export
-rename.src_DF <- function(.data, ...) {
-  rn <- rownames(.data$x)
+rename.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
-  tm <- dplyr::rename(t, ...)
-  tDF <- as(tm, "DataFrame")
-  rownames(tDF) <- rn
-  add_dplyr_compat(tDF)
+  tr <- dplyr::rename(t, ...)
+  restore_DF(tr, rownames(.data))
 }
+setMethod("rename", "DataFrame", rename.DataFrame)
 
 #' @export
 dplyr::count
 #' @export
-count.src_DF <- function(.data, ...) {
-  t <- convert_with_group(.data)
-  dplyr::count(t, ...)
+count.DataFrame <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_drop_default(x)) {
+  t <- convert_with_group(x)
+  dplyr::count(t, ..., wt = wt, sort = sort, name = name, .drop = .drop)
 }
+setMethod("count", "DataFrame", count.DataFrame)
+
+#' @export
+dplyr::group_by_drop_default
+#' @export
+group_by_drop_default.DataFrame <- function(.tbl) {
+  if (!is.null(group_data(.tbl)) && nrow(group_data(.tbl)) > 1L) {
+    tryCatch({
+      !identical(attr(group_data(.tbl), ".drop"), FALSE)
+    }, error = function(e) {
+      TRUE
+    })
+  } else {
+    TRUE
+  }
+}
+setMethod("group_by_drop_default", "DataFrame", group_by_drop_default.DataFrame)
 
 #' @export
 dplyr::tally
 #' @export
-tally.src_DF <- function(x, wt = NULL, sort = FALSE, name = "n") {
+tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = "n") {
   t <- convert_with_group(x)
-  dplyr::tally(t, wt = wt, sort = sort, name = name)
+  wt <- enquo(wt)
+  dplyr::tally(t, wt = !!(wt), sort = sort, name = name)
 }
+setMethod("tally", "DataFrame", tally.DataFrame)
 
 #' @export
 dplyr::summarise
 dplyr::summarize
 #' @export
-summarise.src_DF <- function(.data, ...) {
-  rn <- rownames(.data$x)
+summarise.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   dplyr::summarise(t, ...)
 }
+setMethod("summarise", "DataFrame", summarise.DataFrame)
+setMethod("summarize", "DataFrame", summarise.DataFrame)
 
 #' @export
 dplyr::group_data
 #' @export
-group_data.src_DF <- function(.data) {
-  attr(.data$x, "groups")
+group_data.DataFrame <- function(.data) {
+  group_attr <- attr(.data@listData, "groups")
+  if (!is.null(group_attr) && nrow(group_attr) > 1L) {
+    group_attr
+  } else {
+    rows <- list(seq_len(nrow(.data)))
+    tibble(`:=`(".rows", rows))
+  }
 }
+setMethod("group_data", "DataFrame", group_data.DataFrame)
 
 #' @export
 dplyr::group_vars
 #' @export
-group_vars.src_DF <- function(x) {
-  ## dplyr:::group_vars.grouped_df (not exported)
-  groups <- group_data(x)[[1]]
+group_vars.DataFrame <- function(x) {
+  groups <- group_data(x)
   if (is.character(groups)) {
     groups
   }
@@ -190,78 +174,78 @@ group_vars.src_DF <- function(x) {
     purrr::map_chr(groups, rlang:::as_string)
   }
 }
+setMethod("group_vars", "DataFrame", group_vars.DataFrame)
 
 #' @export
 dplyr::group_by
 #' @export
-group_by.src_DF <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
-  rn <- rownames(.data$x)
+group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
   t <- convert_with_group(.data)
   tm <- dplyr::group_by(t, ..., add = add, .drop = .drop)
-  groupdata <- group_data(tm)
-  tDF <- as(tm, "DataFrame")
-  rownames(tDF) <- rn
-  attr(tDF, "groups") <- list(groupdata)
-  add_dplyr_compat(tDF)
+  restore_DF(tm, rownames(.data))
 }
+setMethod("group_by", "DataFrame", group_by.DataFrame)
 
 #' @export
 dplyr::ungroup
 #' @export
-ungroup.src_DF <- function(x, ...) {
-  attr(x$x, "groups") <- NULL
-  attr(x$x@listData, "groups") <- NULL
+ungroup.DataFrame <- function(x, ...) {
+  attr(x@listData, "groups") <- NULL
   x
 }
+setMethod("ungroup", "DataFrame", ungroup.DataFrame)
 
 #' @export
 dplyr::arrange
 #' @export
-arrange.src_DF <- function(.data, ...) {
-  rn <- rownames(.data$x)
+arrange.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   ta <- dplyr::arrange(t, ...)
-  tDF <- as(ta, "DataFrame")
-  rownames(tDF) <- rn
-  add_dplyr_compat(tDF)
+  restore_DF(ta, rownames(.data))
 }
+setMethod("arrange", "DataFrame", arrange.DataFrame)
 
 #' @export
 dplyr::distinct
 #' @export
-distinct.src_DF <- function(.data, ..., .keep_all = FALSE) {
+distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
   t <- convert_with_group(.data)
   td <- dplyr::distinct(t, ..., .keep_all = .keep_all)
-  tDF <- as(td, "DataFrame")
-  add_dplyr_compat(tDF)
+  restore_DF(td, NULL) # no rownames since they can't be determined
 }
+setMethod("distinct", "DataFrame", distinct.DataFrame)
 
 #' @export
 dplyr::pull
 #' @export
-pull.src_DF <- function(.data, var = -1) {
-  var <- tidyselect::vars_pull(names(.data$x), !!enquo(var))
-  .data$x[[var]]
+pull.DataFrame <- function(.data, var = -1) {
+  var <- tidyselect::vars_pull(names(.data), !!enquo(var))
+  .data[[var]]
 }
+setMethod("pull", "DataFrame", pull.DataFrame)
 
 #' @export
 dplyr::slice
 #' @export
-slice.src_DF <- function(.data, ..., .preserve = FALSE) {
-  rn <- rownames(.data$x)
+slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
   t <- convert_with_group(.data)
   ts <- dplyr::slice(t, ..., .preserve = .preserve)
-  tDF <- as(ts, "DataFrame")
-  rownames(tDF) <- rn[...]
-  add_dplyr_compat(tDF)
+  restore_DF(ts, rownames(.data)[...])
 }
+setMethod("slice", "DataFrame", slice.DataFrame)
 
 convert_with_group <- function(.data) {
-  t <- dplyr::tbl_df(.data$x)
-  if (!is.null(group_data(.data))) {
+  t <- dplyr::tbl_df(.data)
+  if (!is.null(group_data(.data)) && nrow(group_data(.data)) > 1L) {
     for (gvar in group_vars(.data)) {
       t <- dplyr::group_by(t, !!sym(gvar), add = TRUE)
     }
   }
   t
+}
+
+restore_DF <- function(.data, rn) {
+  DF <- as(.data, "DataFrame")
+  rownames(DF) <- rn
+  DF
 }

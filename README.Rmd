@@ -37,10 +37,7 @@ suppressPackageStartupMessages({
 })
 
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
-DF <- as(m, "DataFrame")
-DF
-
-d <- add_dplyr_compat(DF)
+d <- as(m, "DataFrame")
 d
 
 mutate(d, newvar = cyl + hp)
@@ -61,10 +58,9 @@ select(d, am, cyl) %>%
 
 arrange(d, desc(hp))
 
-## row names are not preserved as there may be duplicates 
-rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
-  add_dplyr_compat() %>%
-  distinct()
+# ## row names are not preserved as there may be duplicates 
+# rbind(data.frame(m[1, ], row.names = "MyCar"), d) %>%
+#   distinct()
 
 filter(d, am == 0) 
 

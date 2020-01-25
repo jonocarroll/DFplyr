@@ -9,6 +9,7 @@
 \alias{select}
 \alias{rename}
 \alias{count}
+\alias{group_by_drop_default}
 \alias{tally}
 \alias{summarise}
 \alias{group_data}
@@ -27,7 +28,7 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{dplyr}{\code{\link[dplyr]{filter}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{tbl_vars}}, \code{\link[dplyr]{select}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr]{count}}, \code{\link[dplyr]{tally}}, \code{\link[dplyr]{summarise}}, \code{\link[dplyr]{group_data}}, \code{\link[dplyr]{group_vars}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr]{ungroup}}, \code{\link[dplyr]{arrange}}, \code{\link[dplyr]{distinct}}, \code{\link[dplyr]{pull}}, \code{\link[dplyr]{slice}}}
+  \item{dplyr}{\code{\link[dplyr]{filter}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{tbl_vars}}, \code{\link[dplyr]{select}}, \code{\link[dplyr]{rename}}, \code{\link[dplyr]{count}}, \code{\link[dplyr]{group_by_drop_default}}, \code{\link[dplyr]{tally}}, \code{\link[dplyr]{summarise}}, \code{\link[dplyr]{group_data}}, \code{\link[dplyr]{group_vars}}, \code{\link[dplyr]{group_by}}, \code{\link[dplyr]{ungroup}}, \code{\link[dplyr]{arrange}}, \code{\link[dplyr]{distinct}}, \code{\link[dplyr]{pull}}, \code{\link[dplyr]{slice}}}
 
   \item{ggplot2}{\code{\link[ggplot2]{fortify}}}
 }}
