@@ -121,6 +121,17 @@ library(ggplot2)
 ggplot(d, aes(disp, cyl)) + geom_point()
 ```
 
+## S4 Columns
+
+Support for S4 columns is tentative. Printing works, but not yet working with them.
+
+```{r}
+d2 <- d
+library(GenomicRanges)
+d2$gr <- GRanges("chrY", IRanges(1:32, width=10))
+d2
+```
+
 ## Implementation
 
 Most of the `dplyr` verbs for `DataFrame`s are implmented by first converting to `tibble`, 
