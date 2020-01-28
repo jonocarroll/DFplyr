@@ -55,6 +55,7 @@ has_S4 <- function(x) {
 restore_S4 <- function(old, new, id) {
   ## restore S4 columns
   s4 <- names(which(S4_cols(old)))
+  groups <- group_data(new)
 
   for (s4i in s4) {
     broken_cols <- if (rlang::has_name(new, s4i)) {
@@ -71,12 +72,13 @@ restore_S4 <- function(old, new, id) {
     }
   }
 
+  attr(new@listData, "groups") <- groups
+
   return(new)
 }
 
 #' @export
 dplyr::filter
-#' @importFrom digest digest
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
 
@@ -124,6 +126,8 @@ dplyr::select
 select.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   ts <- dplyr::select(t, ...)
+  ## S4 columns don't need to be restored as they can't be
+  ## selected
   restore_DF(ts, rownames(.data))
 }
 
@@ -134,7 +138,13 @@ dplyr::rename
 rename.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   tr <- dplyr::rename(t, ...)
-  restore_DF(tr, rownames(.data))
+  tDF <- restore_DF(tr, rownames(.data))
+
+  if (has_S4(.data)) {
+    tDF <- restore_S4(.data, tDF, seq_len(nrow(tr)))
+  }
+
+  tDF
 }
 
 
@@ -151,16 +161,6 @@ group_by_drop_default.DataFrame <- function(.tbl) {
   } else {
     TRUE
   }
-}
-
-
-#' @export
-dplyr::tally
-#' @export
-tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = "n") {
-  t <- convert_with_group(x)
-  wt <- enquo(wt)
-  dplyr::tally(t, wt = !!(wt), sort = sort, name = name)
 }
 
 
@@ -212,7 +212,13 @@ dplyr::group_by
 group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
   t <- convert_with_group(.data)
   tm <- dplyr::group_by(t, ..., add = add, .drop = .drop)
-  restore_DF(tm, rownames(.data))
+  tDF <- restore_DF(tm, rownames(.data))
+
+  if (has_S4(.data)) {
+    tDF <- restore_S4(.data, tDF, seq_len(nrow(tm)))
+  }
+
+  tDF
 }
 
 
@@ -229,9 +235,25 @@ ungroup.DataFrame <- function(x, ...) {
 dplyr::arrange
 #' @export
 arrange.DataFrame <- function(.data, ...) {
+  ## temporarily blind S4 columns
+  .data_orig <- .data
+  s4 <- names(which(S4_cols(.data)))
+  for (s4i in s4) {
+    .data[[s4i]] <- asS4(seq_len(nrow(.data)))
+  }
+
   t <- convert_with_group(.data)
+  t$rowid <- seq_len(nrow(t))
   ta <- dplyr::arrange(t, ...)
-  restore_DF(ta, rownames(.data))
+  tDF <- restore_DF(ta, rownames(.data)[ta$rowid])
+
+  if (has_S4(.data)) {
+    tDF <- restore_S4(.data_orig, tDF, ta$rowid)
+  }
+
+  tDF$rowid <- NULL
+  tDF
+
 }
 
 
@@ -239,6 +261,19 @@ arrange.DataFrame <- function(.data, ...) {
 dplyr::distinct
 #' @export
 distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
+  ## cannot distinct on S4 columns
+  s4 <- names(which(S4_cols(.data)))
+
+  if (length(s4) > 0L) {
+    warning("S4 columns not supported in distinct: ",
+            toString(s4),
+            ".\n These will be dropped prior to comparison.",
+            call. = FALSE)
+    for (s4i in s4) {
+      .data[[s4i]] <- NULL
+    }
+  }
+
   t <- convert_with_group(.data)
   td <- dplyr::distinct(t, ..., .keep_all = .keep_all)
   restore_DF(td, NULL) # no rownames since they can't be determined
@@ -260,7 +295,13 @@ dplyr::slice
 slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
   t <- convert_with_group(.data)
   ts <- dplyr::slice(t, ..., .preserve = .preserve)
-  restore_DF(ts, rownames(.data)[...])
+  tDF <- restore_DF(ts, rownames(.data)[...])
+
+  if (has_S4(.data)) {
+    tDF <- restore_S4(.data, tDF, seq_len(nrow(t))[...])
+  }
+
+  tDF
 }
 
 
