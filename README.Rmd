@@ -123,18 +123,50 @@ ggplot(d, aes(disp, cyl)) + geom_point()
 
 ## S4 Columns
 
-Support for S4 columns is tentative. Printing works, but not yet working with them.
+Support for S4 columns is preliminary. Printing works, and a `DataFrame` containing them 
+may be used in verb operations, but the verbs cannot (currently) act directly on them (via `...`)
 
 ```{r}
 d2 <- d
 library(GenomicRanges)
 d2$gr <- GRanges("chrY", IRanges(1:32, width=10))
+d2$gr2 <- GRanges("chrX", IRanges(1:32, width = 10))
+d2$nl <- NumericList(lapply(d2$cyl, function(n) rnorm(n)))
 d2
+
+filter(d2, cyl == 6)
+
+select(d2, cyl:am)
+
+mutate(d2, newcol = rnorm(32))
+```
+
+`DataFrame` objects are still useful as the `.data` argument
+
+```{r}
+mtcars_desc <- tibble::tribble(
+  ~col, ~desc,
+  "mpg",	"Miles/(US) gallon",
+  "cyl",	"Number of cylinders",
+  "disp",	"Displacement (cu.in.)",
+  "hp",	"Gross horsepower",
+  "drat",	"Rear axle ratio",
+  "wt",	"Weight (1000 lbs)",
+  "qsec",	"1/4 mile time",
+  "vs",	"Engine (0 = V-shaped, 1 = straight)",
+  "am",	"Transmission (0 = automatic, 1 = manual)",
+  "gear",	"Number of forward gears",
+  "carb",	"Number of carburetors"
+)
+mcols(d) <- mtcars_desc[match(names(d), mtcars_desc$col), "desc"]
+mcols(d)
+
+mutate(mcols(d), varname = tools::toTitleCase(desc))
 ```
 
 ## Implementation
 
 Most of the `dplyr` verbs for `DataFrame`s are implmented by first converting to `tibble`, 
 performing the verb operation, then converting back to `DataFrame`. Care has been taken to 
-retain groups and row names through these operations, but this may introduce some 
-complications. If you spot any, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).
+retain groups and row names and preserve S4 columns through these operations, but this is fragile and 
+may introduce some complications. If you spot any, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).

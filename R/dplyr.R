@@ -44,17 +44,52 @@ format.DataFrame <- function(x, ...) {
   x
 }
 
+S4_cols <- function(x) {
+  vapply(x, isS4, logical(1))
+}
+
+has_S4 <- function(x) {
+  any(S4_cols(x))
+}
+
+restore_S4 <- function(old, new, id) {
+  ## restore S4 columns
+  s4 <- names(which(S4_cols(old)))
+
+  for (s4i in s4) {
+    broken_cols <- if (rlang::has_name(new, s4i)) {
+      s4i
+    } else {
+      names(new)[startsWith(names(new), paste0(s4i, "."))]
+    }
+    new[[broken_cols[1]]] <- old[[s4i]][id]
+    names(new) <- replace(names(new), which(names(new) == broken_cols[[1]]), s4i)
+    if (length(broken_cols) > 1L) {
+      for (bc in broken_cols[2:length(broken_cols)]) {
+        new[[bc]] <- NULL
+      }
+    }
+  }
+
+  return(new)
+}
 
 #' @export
 dplyr::filter
 #' @importFrom digest digest
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
+
   t <- convert_with_group(.data)
   t$rowid <- seq_len(nrow(t))
   tf <- dplyr::filter(t, ..., .preserve = .preserve)
   tDF <- restore_DF(tf, rownames(.data)[tf$rowid])
+
+  if (has_S4(.data)) {
+    tDF <- restore_S4(.data, tDF, tf$rowid)
+  }
   tDF$rowid <- NULL
+
   tDF
 }
 
@@ -65,7 +100,13 @@ dplyr::mutate
 mutate.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   tm <- dplyr::mutate(t, ...)
-  restore_DF(tm, rownames(.data))
+  tDF <- restore_DF(tm, rownames(.data))
+
+  if (has_S4(.data)) {
+    tDF <- restore_S4(.data, tDF, seq_len(nrow(tm)))
+  }
+
+  tDF
 }
 
 
@@ -94,15 +135,6 @@ rename.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   tr <- dplyr::rename(t, ...)
   restore_DF(tr, rownames(.data))
-}
-
-
-#' @export
-dplyr::count
-#' @export
-count.DataFrame <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_drop_default(x)) {
-  t <- convert_with_group(x)
-  dplyr::count(t, ..., wt = wt, sort = sort, name = name, .drop = .drop)
 }
 
 
