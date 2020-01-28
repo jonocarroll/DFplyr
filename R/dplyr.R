@@ -43,7 +43,7 @@
 format.DataFrame <- function(x, ...) {
   x
 }
-setMethod("format", "DataFrame", format.DataFrame)
+
 
 #' @export
 dplyr::filter
@@ -59,7 +59,7 @@ filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
   tDF$rowid <- NULL
   as(tDF, "DataFrame")
 }
-setMethod("filter", "DataFrame", filter.DataFrame)
+
 
 #' @export
 dplyr::mutate
@@ -69,7 +69,7 @@ mutate.DataFrame <- function(.data, ...) {
   tm <- dplyr::mutate(t, ...)
   restore_DF(tm, rownames(.data))
 }
-setMethod("mutate", "DataFrame", mutate.DataFrame)
+
 
 #' @export
 dplyr::tbl_vars
@@ -77,7 +77,7 @@ dplyr::tbl_vars
 tbl_vars.DataFrame <- function(x) {
   names(x)
 }
-setMethod("tbl_vars", "DataFrame", tbl_vars.DataFrame)
+
 
 #' @export
 dplyr::select
@@ -87,7 +87,7 @@ select.DataFrame <- function(.data, ...) {
   ts <- dplyr::select(t, ...)
   restore_DF(ts, rownames(.data))
 }
-setMethod("select", "DataFrame", select.DataFrame)
+
 
 #' @export
 dplyr::rename
@@ -97,7 +97,7 @@ rename.DataFrame <- function(.data, ...) {
   tr <- dplyr::rename(t, ...)
   restore_DF(tr, rownames(.data))
 }
-setMethod("rename", "DataFrame", rename.DataFrame)
+
 
 #' @export
 dplyr::count
@@ -106,7 +106,7 @@ count.DataFrame <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop =
   t <- convert_with_group(x)
   dplyr::count(t, ..., wt = wt, sort = sort, name = name, .drop = .drop)
 }
-setMethod("count", "DataFrame", count.DataFrame)
+
 
 #' @export
 dplyr::group_by_drop_default
@@ -122,7 +122,7 @@ group_by_drop_default.DataFrame <- function(.tbl) {
     TRUE
   }
 }
-setMethod("group_by_drop_default", "DataFrame", group_by_drop_default.DataFrame)
+
 
 #' @export
 dplyr::tally
@@ -132,7 +132,7 @@ tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = "n") {
   wt <- enquo(wt)
   dplyr::tally(t, wt = !!(wt), sort = sort, name = name)
 }
-setMethod("tally", "DataFrame", tally.DataFrame)
+
 
 #' @export
 dplyr::summarise
@@ -142,8 +142,8 @@ summarise.DataFrame <- function(.data, ...) {
   t <- convert_with_group(.data)
   dplyr::summarise(t, ...)
 }
-setMethod("summarise", "DataFrame", summarise.DataFrame)
-setMethod("summarize", "DataFrame", summarise.DataFrame)
+
+
 
 #' @export
 dplyr::group_data
@@ -157,7 +157,7 @@ group_data.DataFrame <- function(.data) {
     tibble(`:=`(".rows", rows))
   }
 }
-setMethod("group_data", "DataFrame", group_data.DataFrame)
+
 
 #' @export
 dplyr::group_vars
@@ -174,7 +174,7 @@ group_vars.DataFrame <- function(x) {
     purrr::map_chr(groups, rlang:::as_string)
   }
 }
-setMethod("group_vars", "DataFrame", group_vars.DataFrame)
+
 
 #' @export
 dplyr::group_by
@@ -184,7 +184,7 @@ group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_de
   tm <- dplyr::group_by(t, ..., add = add, .drop = .drop)
   restore_DF(tm, rownames(.data))
 }
-setMethod("group_by", "DataFrame", group_by.DataFrame)
+
 
 #' @export
 dplyr::ungroup
@@ -193,7 +193,7 @@ ungroup.DataFrame <- function(x, ...) {
   attr(x@listData, "groups") <- NULL
   x
 }
-setMethod("ungroup", "DataFrame", ungroup.DataFrame)
+
 
 #' @export
 dplyr::arrange
@@ -203,7 +203,7 @@ arrange.DataFrame <- function(.data, ...) {
   ta <- dplyr::arrange(t, ...)
   restore_DF(ta, rownames(.data))
 }
-setMethod("arrange", "DataFrame", arrange.DataFrame)
+
 
 #' @export
 dplyr::distinct
@@ -213,7 +213,7 @@ distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
   td <- dplyr::distinct(t, ..., .keep_all = .keep_all)
   restore_DF(td, NULL) # no rownames since they can't be determined
 }
-setMethod("distinct", "DataFrame", distinct.DataFrame)
+
 
 #' @export
 dplyr::pull
@@ -222,7 +222,7 @@ pull.DataFrame <- function(.data, var = -1) {
   var <- tidyselect::vars_pull(names(.data), !!enquo(var))
   .data[[var]]
 }
-setMethod("pull", "DataFrame", pull.DataFrame)
+
 
 #' @export
 dplyr::slice
@@ -232,7 +232,7 @@ slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
   ts <- dplyr::slice(t, ..., .preserve = .preserve)
   restore_DF(ts, rownames(.data)[...])
 }
-setMethod("slice", "DataFrame", slice.DataFrame)
+
 
 convert_with_group <- function(.data) {
   t <- dplyr::tbl_df(.data)

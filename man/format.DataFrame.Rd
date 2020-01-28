@@ -4,7 +4,7 @@
 \alias{format.DataFrame}
 \title{Treat a \code{S4Vectors::DataFrame} as a \code{dplyr} data source}
 \usage{
-format.DataFrame(x, ...)
+\method{format}{DataFrame}(x, ...)
 }
 \arguments{
 \item{x}{A \code{S4Vectors::DataFrame} object}

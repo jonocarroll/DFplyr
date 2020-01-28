@@ -58,9 +58,11 @@ select(d, am, cyl) %>%
 
 arrange(d, desc(hp))
 
-# ## row names are not preserved as there may be duplicates 
-# rbind(data.frame(m[1, ], row.names = "MyCar"), d) %>%
-#   distinct()
+dd <- rbind(data.frame(m[1, ], row.names = "MyCar"), d)
+dd
+
+## row names are not preserved as there may be duplicates 
+distinct(dd)
 
 filter(d, am == 0) 
 

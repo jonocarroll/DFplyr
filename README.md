@@ -40,7 +40,6 @@ suppressPackageStartupMessages({
 #> 'dplyr::setequal' when loading 'DFplyr'
 #> Warning: replacing previous import 'S4Vectors::rename' by 'dplyr::rename'
 #> when loading 'DFplyr'
-#> Warning: multiple methods tables found for 'rename'
 
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
 d <- as(m, "DataFrame")
@@ -139,16 +138,16 @@ count(d, gear, am, cyl)
 #> # A tibble: 10 x 4
 #>     gear    am   cyl     n
 #>    <dbl> <dbl> <dbl> <int>
-#>  1     3     0     4     0
-#>  2     3     0     6     0
-#>  3     3     0     8     0
-#>  4     4     0     4     0
-#>  5     4     0     6     0
-#>  6     4     1     4     0
-#>  7     4     1     6     0
-#>  8     5     1     4     0
-#>  9     5     1     6     0
-#> 10     5     1     8     0
+#>  1     3     0     4     1
+#>  2     3     0     6     2
+#>  3     3     0     8    12
+#>  4     4     0     4     2
+#>  5     4     0     6     2
+#>  6     4     1     4     6
+#>  7     4     1     6     2
+#>  8     5     1     4     2
+#>  9     5     1     6     1
+#> 10     5     1     8     2
 
 select(d, am, cyl)
 #> dplyr-compatible DataFrame with 32 rows and 2 columns
@@ -199,9 +198,39 @@ arrange(d, desc(hp))
 #> Maserati Bora             4        62         0         4     146.7
 #> Volvo 142E                4        52         1         4      75.7
 
-# ## row names are not preserved as there may be duplicates 
-# rbind(data.frame(m[1, ], row.names = "MyCar"), d) %>%
-#   distinct()
+dd <- rbind(data.frame(m[1, ], row.names = "MyCar"), d)
+dd
+#> dplyr-compatible DataFrame with 33 rows and 5 columns
+#>                      cyl        hp        am      gear      disp
+#>                <numeric> <numeric> <numeric> <numeric> <numeric>
+#> MyCar                  6       110         1         4       160
+#> Mazda RX4              6       110         1         4       160
+#> Mazda RX4 Wag          6       110         1         4       160
+#> Datsun 710             4        93         1         4       108
+#> Hornet 4 Drive         6       110         0         3       258
+#> ...                  ...       ...       ...       ...       ...
+#> Lotus Europa           4       113         1         5      95.1
+#> Ford Pantera L         8       264         1         5       351
+#> Ferrari Dino           6       175         1         5       145
+#> Maserati Bora          8       335         1         5       301
+#> Volvo 142E             4       109         1         4       121
+
+## row names are not preserved as there may be duplicates 
+distinct(dd)
+#> dplyr-compatible DataFrame with 28 rows and 5 columns
+#>           cyl        hp        am      gear      disp
+#>     <numeric> <numeric> <numeric> <numeric> <numeric>
+#> 1           6       110         1         4       160
+#> 2           4        93         1         4       108
+#> 3           6       110         0         3       258
+#> 4           8       175         0         3       360
+#> 5           6       105         0         3       225
+#> ...       ...       ...       ...       ...       ...
+#> 24          4       113         1         5      95.1
+#> 25          8       264         1         5       351
+#> 26          6       175         1         5       145
+#> 27          8       335         1         5       301
+#> 28          4       109         1         4       121
 
 filter(d, am == 0) 
 #> dplyr-compatible DataFrame with 19 rows and 5 columns
