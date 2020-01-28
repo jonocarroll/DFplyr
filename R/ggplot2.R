@@ -4,4 +4,3 @@ ggplot2::fortify
 fortify.DataFrame <- function(model, data, ...) {
   convert_with_group(model)
 }
-setMethod("fortify", "DataFrame", fortify.DataFrame)

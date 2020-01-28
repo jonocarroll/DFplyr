@@ -307,11 +307,6 @@ count(d, gear, am, cyl)
 
 ``` r
 library(ggplot2)
-#> 
-#> Attaching package: 'ggplot2'
-#> The following object is masked from 'package:DFplyr':
-#> 
-#>     fortify
 ggplot(d, aes(disp, cyl)) + geom_point()
 ```
 
@@ -322,4 +317,6 @@ ggplot(d, aes(disp, cyl)) + geom_point()
 Most of the `dplyr` verbs for `DataFrame`s are implmented by first
 converting to `tibble`, performing the verb operation, then converting
 back to `DataFrame`. Care has been taken to retain groups and row names
-through these operations.
+through these operations, but this may introduce some complications. If
+you spot any, please [file an
+issue](https://github.com/jonocarroll/DFplyr/issues/new).
