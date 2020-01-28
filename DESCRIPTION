@@ -15,5 +15,9 @@ URL: https://github.com/jonocarroll/DFplyr
 BugReports: https://github.com/jonocarroll/DFplyr/issues
 Imports: 
     dplyr,
+    rlang,
     ggplot2,
     S4Vectors
+Suggests: 
+    GenomicRanges,
+    IRanges
