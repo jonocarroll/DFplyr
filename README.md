@@ -312,6 +312,55 @@ ggplot(d, aes(disp, cyl)) + geom_point()
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
+## S4 Columns
+
+Support for S4 columns is tentative. Printing works, but not yet working
+with them.
+
+``` r
+d2 <- d
+library(GenomicRanges)
+#> Loading required package: IRanges
+#> 
+#> Attaching package: 'IRanges'
+#> The following object is masked from 'package:DFplyr':
+#> 
+#>     slice
+#> The following objects are masked from 'package:dplyr':
+#> 
+#>     collapse, desc, slice
+#> Loading required package: GenomeInfoDb
+d2$gr <- GRanges("chrY", IRanges(1:32, width=10))
+d2
+#> dplyr-compatible DataFrame with 32 rows and 6 columns
+#>                         cyl        hp        am      gear      disp
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
+#> Mazda RX4                 6       110         1         4       160
+#> Mazda RX4 Wag             6       110         1         4       160
+#> Datsun 710                4        93         1         4       108
+#> Hornet 4 Drive            6       110         0         3       258
+#> Hornet Sportabout         8       175         0         3       360
+#> ...                     ...       ...       ...       ...       ...
+#> Lotus Europa              4       113         1         5      95.1
+#> Ford Pantera L            8       264         1         5       351
+#> Ferrari Dino              6       175         1         5       145
+#> Maserati Bora             8       335         1         5       301
+#> Volvo 142E                4       109         1         4       121
+#>                           gr
+#>                    <GRanges>
+#> Mazda RX4          chrY:1-10
+#> Mazda RX4 Wag      chrY:2-11
+#> Datsun 710         chrY:3-12
+#> Hornet 4 Drive     chrY:4-13
+#> Hornet Sportabout  chrY:5-14
+#> ...                      ...
+#> Lotus Europa      chrY:28-37
+#> Ford Pantera L    chrY:29-38
+#> Ferrari Dino      chrY:30-39
+#> Maserati Bora     chrY:31-40
+#> Volvo 142E        chrY:32-41
+```
+
 ## Implementation
 
 Most of the `dplyr` verbs for `DataFrame`s are implmented by first
