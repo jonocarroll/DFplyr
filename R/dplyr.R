@@ -50,14 +50,12 @@ dplyr::filter
 #' @importFrom digest digest
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
-  rn <- rownames(.data$x)
   t <- convert_with_group(.data)
   t$rowid <- seq_len(nrow(t))
   tf <- dplyr::filter(t, ..., .preserve = .preserve)
-  tDF <- as(tf, "DataFrame")
-  rownames(tDF) <- rn[tf$rowid]
+  tDF <- restore_DF(tf, rownames(.data)[tf$rowid])
   tDF$rowid <- NULL
-  as(tDF, "DataFrame")
+  tDF
 }
 
 
