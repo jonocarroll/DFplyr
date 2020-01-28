@@ -1,8 +1,7 @@
 
 #' @import S4Vectors
-.show_src_DF <- function(x) {
-  x_src_DF <- x
-  x <- drop_dplyr_compat(x)
+.show_DF <- function(object) {
+  x <- x_src_DF <- object
   nhead <- get_showHeadLines()
   ntail <- get_showTailLines()
   x_nrow <- nrow(x)
@@ -12,7 +11,7 @@
       " and ",
       x_ncol, " column", ifelse(x_ncol == 1L, "", "s"),
       "\n", sep="")
-  if (!is.null(group_data(x_src_DF))) {
+  if (!is.null(group_data(x_src_DF)) & nrow(group_data(x_src_DF)) > 1L) {
     cat("Groups: ", toString(group_vars(x_src_DF)), "\n")
   }
   if (x_nrow != 0L && x_ncol != 0L) {
@@ -34,6 +33,8 @@
   }
   invisible(NULL)
 }
+
+setMethod("show", "DataFrame", .show_DF)
 
 .make_rownames_for_display <- function(x_rownames, nrow, nhead, ntail) {
   p1 <- ifelse (nhead == 0L, 0L, 1L)

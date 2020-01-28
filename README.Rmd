@@ -17,7 +17,9 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of DFplyr is to enable `dplyr` support for `S4Vectors::DataFrame`.
+The goal of DFplyr is to enable `dplyr` and `ggplot2` support for `S4Vectors::DataFrame` by 
+providing the appropriate extension methods. As row names are an important feature of many 
+Bioconductor structures, these are preserved where possible.
 
 ## Installation
 
@@ -29,31 +31,63 @@ devtools::install_github("jonocarroll/DFplyr")
 ```
 ## Examples
 
+Most `dplyr` functions are implemented. If you find any which are not, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).
+
 ```{r}
-suppressPackageStartupMessages({
-  library(S4Vectors)
-  library(dplyr)
-  library(DFplyr)
-})
+suppressPackageStartupMessages(
+  suppressWarnings({
+    library(S4Vectors)
+    library(dplyr)
+    library(DFplyr)
+  }))
+```
 
+First create an S4Vectors DataFrame
+
+```{r}
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
-DF <- as(m, "DataFrame")
-DF
-
-d <- add_dplyr_compat(DF)
+d <- as(m, "DataFrame")
 d
+```
 
+This will appear in RStudio's environment pane as a `Formal class DataFrame (dplyr-compatible)` when 
+using `DFplyr`. No interference with the actual object is required, but this helps 
+identify that `dplyr`-compatibility is available.
+
+`DataFrame`s can then be used in `dplyr` calls the same as `data.frame` or `tibble` objects
+
+```{r}
 mutate(d, newvar = cyl + hp)
+```
 
+This includes piped calls with `%>%`
+
+
+```{r}
+mutate(d, newvar = cyl + hp) %>%
+  pull(newvar)
+```
+
+and `tidyselect` helpers.
+
+```{r}
 mutate_at(d, vars(starts_with("c")), ~.^2)
+```
 
+Importantly, grouped operations are supported. `DataFrame` does not 
+natively support groups (the same way that `data.frame` does not) so these
+are implemented specifically for `DFplyr`
+
+```{r}
 group_by(d, cyl, am)
 
-group_by(d, cyl, am) %>%
-  tally(gear)
+group_by(d, cyl) %>% 
+  top_n(1, disp)
+```
 
-count(d, gear, am, cyl)
+Other verbs are similiarly implemented, and preserve row names where possible
 
+```{r}
 select(d, am, cyl)
 
 select(d, am, cyl) %>%
@@ -61,14 +95,23 @@ select(d, am, cyl) %>%
 
 arrange(d, desc(hp))
 
-## row names are not preserved as there may be duplicates 
-rbind(data.frame(m[1, ], row.names = "MyCar"), DF) %>%
-  add_dplyr_compat() %>%
-  distinct()
-
 filter(d, am == 0) 
 
 slice(d, 3:6)
+
+dd <- rbind(data.frame(m[1, ], row.names = "MyCar"), d)
+dd
+```
+
+Row names are not preserved when there may be duplicates 
+
+```{r}
+distinct(dd)
+
+group_by(d, cyl, am) %>%
+  tally(gear)
+
+count(d, gear, am, cyl)
 ```
 
 `ggplot2` support is also enabled
@@ -77,3 +120,10 @@ slice(d, 3:6)
 library(ggplot2)
 ggplot(d, aes(disp, cyl)) + geom_point()
 ```
+
+## Implementation
+
+Most of the `dplyr` verbs for `DataFrame`s are implmented by first converting to `tibble`, 
+performing the verb operation, then converting back to `DataFrame`. Care has been taken to 
+retain groups and row names through these operations, but this may introduce some 
+complications. If you spot any, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).
