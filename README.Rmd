@@ -45,8 +45,15 @@ suppressPackageStartupMessages(
 First create an S4Vectors DataFrame
 
 ```{r}
+# m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
+# d <- as(m, "DataFrame")
+# d
+library(S4Vectors)
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
 d <- as(m, "DataFrame")
+d$gr <- GenomicRanges::GRanges("chrY", IRanges::IRanges(1:32, width=10))
+d$gr2 <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width = 10))
+d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
 d
 ```
 
@@ -99,14 +106,14 @@ filter(d, am == 0)
 
 slice(d, 3:6)
 
-dd <- rbind(data.frame(m[1, ], row.names = "MyCar"), d)
-dd
+# dd <- rbind(data.frame(m[1, ], row.names = "MyCar"), d)
+# dd
 ```
 
 Row names are not preserved when there may be duplicates 
 
 ```{r}
-distinct(dd)
+distinct(d)
 
 group_by(d, cyl, am) %>%
   tally(gear)

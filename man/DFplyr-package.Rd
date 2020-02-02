@@ -12,6 +12,6 @@ Provides a backend to `dplyr` supporting `S4Vectors::DataFrame`
 [add_dplyr_compat()]
 }
 \author{
-\strong{Maintainer}: Jonathan Carroll \email{rpkg@jcarroll.com.au} (0000-0002-1404-5264)
+\strong{Maintainer}: Jonathan Carroll \email{rpkg@jcarroll.com.au} (\href{https://orcid.org/0000-0002-1404-5264}{ORCID})
 
 }
