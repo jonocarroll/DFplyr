@@ -42,17 +42,14 @@ suppressPackageStartupMessages(
   }))
 ```
 
-First create an S4Vectors DataFrame
+First create an S4Vectors DataFrame, including S4 columns if desired
 
 ```{r}
-# m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
-# d <- as(m, "DataFrame")
-# d
 library(S4Vectors)
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
 d <- as(m, "DataFrame")
-d$gr <- GenomicRanges::GRanges("chrY", IRanges::IRanges(1:32, width=10))
-d$gr2 <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width = 10))
+d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width=10))
+d$grY <- GenomicRanges::GRanges("chrY", IRanges::IRanges(1:32, width = 10))
 d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
 d
 ```
@@ -61,13 +58,26 @@ This will appear in RStudio's environment pane as a `Formal class DataFrame (dpl
 using `DFplyr`. No interference with the actual object is required, but this helps 
 identify that `dplyr`-compatibility is available.
 
-`DataFrame`s can then be used in `dplyr` calls the same as `data.frame` or `tibble` objects
+`DataFrame`s can then be used in `dplyr` calls the same as `data.frame` or `tibble` 
+objects. Support for working with S4 columns is enabled provided they have appropriate 
+functions. Adding multiple columns will result in the new columns being created in 
+alphabetical order
 
 ```{r}
 mutate(d, newvar = cyl + hp)
+
+mutate(d, nl2 = nl * 2)
+
+mutate(d, length_nl = lengths(nl))
+
+mutate(d, 
+       chr = GenomeInfoDb::seqnames(grX), 
+       strand_X = BiocGenerics::strand(grX), 
+       end_X = BiocGenerics::end(grX))
 ```
 
-This includes piped calls with `%>%`
+the object returned remains a standard `DataFrame`, and further calls can be 
+piped with `%>%`
 
 
 ```{r}
@@ -75,10 +85,22 @@ mutate(d, newvar = cyl + hp) %>%
   pull(newvar)
 ```
 
-and `tidyselect` helpers.
+Some of the variants of the `dplyr` verbs also work
+
+```{r}
+mutate_if(d, is.numeric, ~.^2)
+
+mutate_if(d, ~inherits(., "GRanges"), BiocGenerics::start)
+```
+
+Use of `tidyselect` helpers is limited to within `dplyr::vars()` calls and using 
+the `_at` variants
 
 ```{r}
 mutate_at(d, vars(starts_with("c")), ~.^2)
+
+select_at(d, vars(starts_with("gr")))
+
 ```
 
 Importantly, grouped operations are supported. `DataFrame` does not 
@@ -106,11 +128,14 @@ filter(d, am == 0)
 
 slice(d, 3:6)
 
-# dd <- rbind(data.frame(m[1, ], row.names = "MyCar"), d)
+# dd <- rbind(data.frame(d[1, ], row.names = "MyCar"), d)
 # dd
 ```
 
-Row names are not preserved when there may be duplicates 
+Row names are not preserved when there may be duplicates or they don't make 
+sense, otherwise the first label (according to the current de-duplication method, 
+in the case of `distinct`, this is via `BiocGenerics::duplicated`). This may have 
+complications for S4 columns.
 
 ```{r}
 distinct(d)
@@ -126,17 +151,6 @@ count(d, gear, am, cyl)
 ```{r}
 library(ggplot2)
 ggplot(d, aes(disp, cyl)) + geom_point()
-```
-
-## S4 Columns
-
-Support for S4 columns is tentative. Printing works, but not yet working with them.
-
-```{r}
-d2 <- d
-library(GenomicRanges)
-d2$gr <- GRanges("chrY", IRanges(1:32, width=10))
-d2
 ```
 
 ## Implementation

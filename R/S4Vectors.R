@@ -1,8 +1,7 @@
 
-#' @import S4Vectors
 .show_DF <- function(object) {
-  nhead <- get_showHeadLines()
-  ntail <- get_showTailLines()
+  nhead <- S4Vectors::get_showHeadLines()
+  ntail <- S4Vectors::get_showTailLines()
   nr <- nrow(object)
   nc <- ncol(object)
   cat("dplyr-compatible DataFrame", " with ",
@@ -23,13 +22,13 @@
     }
     else {
       out <- rbind(as.matrix(format(as.data.frame(lapply(object,
-                                                         function(x) showAsCell(head(x, nhead))), optional = TRUE))),
+                                                         function(x) S4Vectors::showAsCell(head(x, nhead))), optional = TRUE))),
                    rbind(rep.int("...", nc)), as.matrix(format(as.data.frame(lapply(object,
-                                                                                    function(x) showAsCell(tail(x, ntail))), optional = TRUE))))
+                                                                                    function(x) S4Vectors::showAsCell(tail(x, ntail))), optional = TRUE))))
       rownames(out) <- S4Vectors:::.rownames(nms, nr, nhead, ntail)
     }
     classinfo <- matrix(unlist(lapply(object, function(x) {
-      paste0("<", classNameForDisplay(x)[1], ">")
+      paste0("<", S4Vectors::classNameForDisplay(x)[1], ">")
     }), use.names = FALSE), nrow = 1, dimnames = list("",
                                                       colnames(out)))
     out <- rbind(classinfo, out)
@@ -60,7 +59,7 @@ setMethod("show", "DataFrame", .show_DF)
 .make_class_info_for_display <- function(x) {
   matrix(
     unlist(
-      lapply(x, function(col) paste0("<", .classNameForDisplay(col), ">")),
+      lapply(x, function(col) paste0("<", S4Vectors::.classNameForDisplay(col), ">")),
       use.names=FALSE
     ),
     nrow=1L,

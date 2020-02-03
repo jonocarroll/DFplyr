@@ -44,9 +44,11 @@ format.DataFrame <- function(x, ...) {
   x
 }
 
+#' @importFrom dplyr filter
 #' @export
 dplyr::filter
-#' @importFrom digest digest
+
+#' @importFrom rlang quos eval_tidy
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
@@ -78,8 +80,11 @@ top_n_rank <- function (n, wt) {
   }
 }
 
+#' @importFrom dplyr mutate
 #' @export
 dplyr::mutate
+
+#' @importFrom rlang quos quo_squash
 #' @export
 mutate.DataFrame <- function(.data, ...) {
 
@@ -99,6 +104,7 @@ mutate.DataFrame <- function(.data, ...) {
 
 }
 
+#' @importFrom rlang eval_tidy quo_get_env
 mutate_internal <- function(.data, FUNS, quos) {
   op <- options("useFancyQuotes")
   on.exit(options(op))
@@ -113,33 +119,38 @@ mutate_internal <- function(.data, FUNS, quos) {
   EXPRS <- lapply(names(FUNS), function(x) {
     FUNS_expl <- with(.data, rlang::eval_tidy(FUNS[[x]]))
     FUNS_obj <- with(.data, eval(rlang::eval_tidy(FUNS[[x]])))
-    if (inherits(FUNS_obj, "character") || inherits(FUNS_obj, "language")) {
-      sprintf('%s <- c(%s)', x, paste0(sQuote(FUNS_expl), collapse = ", "))
+    if (!inherits(FUNS_obj, "numeric")) {
+      sprintf('%s <- %s', x, paste0(deparse(FUNS_expl), collapse = ""))
+      # sprintf('%s <- c(%s)', x, paste0(sQuote(FUNS_expl), collapse = ", "))
     } else {
       sprintf('%s <- c(%s)', x, paste0(FUNS_expl, collapse = ", "))
     }
   })
-  within(.data, eval(parse(text = paste0(unlist(EXPRS), collapse = '\n'))))
+  S4Vectors::within(.data, eval(parse(text = paste0(unlist(EXPRS), collapse = '\n'))))
 }
 
 
+#' @importFrom dplyr tbl_vars
 #' @export
 dplyr::tbl_vars
+
 #' @export
 tbl_vars.DataFrame <- function(x) {
   names(x)
 }
 
-
+#' @importFrom dplyr select
 #' @export
 dplyr::select
+
+#' @importFrom rlang quos quo_squash exprs
 #' @export
 select.DataFrame <- function(.data, ...) {
   dotnames <- names(rlang::exprs(...))
-  .data <- subset(.data,
+  .data <- base::subset(.data,
                   select = unlist(lapply(
                     rlang::quos(...),
-                    function(x){eval(rlang::quo_squash(x))})
+                    function(x){rlang::eval_tidy(rlang::quo_squash(x))})
                   ))
   if (any(dotnames != "")) {
     non_empty <- which(dotnames != "")
@@ -150,26 +161,33 @@ select.DataFrame <- function(.data, ...) {
   .data
 }
 
-
+#' @importFrom dplyr rename
 #' @export
 dplyr::rename
-#' @export
-rename.DataFrame <- function(.data, ...) {
-  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  EXPRS <- lapply(names(FNS), function(x){
-    c(x, deparse(FNS[[x]]))
-  })
-  NAMES <- do.call(rbind, EXPRS)
-  for(i in 1:nrow(NAMES)){
-    names(.data)[match(NAMES[i,2], names(.data))] <- NAMES[i, 1]
-  }
 
-  .data
+#' @importFrom rlang quos quo_squash
+#' @export
+rename.DataFrame <- function(x, ...) {
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+  ## S4Vectors::rename not imported as it would mask the existing generic
+  S4Vectors::rename(x, setNames(names(FNS), unlist(FNS)))
+  # browser()
+  # EXPRS <- lapply(names(FNS), function(x){
+  #   c(x, deparse(FNS[[x]]))
+  # })
+  # NAMES <- do.call(rbind, EXPRS)
+  # for(i in 1:nrow(NAMES)){
+  #   names(.data)[match(NAMES[i,2], names(.data))] <- NAMES[i, 1]
+  # }
+  #
+  # .data
 }
 
-
+#' @importFrom dplyr count
 #' @export
 dplyr::count
+
+#' @importFrom rlang quos quo_squash
 #' @export
 count <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_drop_default(x)) {
 
@@ -192,13 +210,16 @@ count <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_
   }
 
   names(RET)[ncol(RET)] <- name
+  RET <- RET[RET[[name]] != 0, ]
+  RET <- RET[with(RET, do.call(order, EXPRS)), ]
 
   RET
 }
 
-
+#' @importFrom dplyr group_by_drop_default
 #' @export
 dplyr::group_by_drop_default
+
 #' @export
 group_by_drop_default.DataFrame <- function(.tbl) {
   if (!is.null(group_data(.tbl)) && nrow(group_data(.tbl)) > 1L) {
@@ -212,9 +233,12 @@ group_by_drop_default.DataFrame <- function(.tbl) {
   }
 }
 
+#' @importFrom dplyr summarise summarize
 #' @export
 dplyr::summarise
-dplyr::summarize
+dplyr::summarise
+
+#' @importFrom rlang quos quo_squash eval_tidy
 #' @export
 summarise.DataFrame <- function(.data, ...) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
@@ -234,10 +258,14 @@ summarise.DataFrame <- function(.data, ...) {
   RET
 }
 
+#' @export
+summarize.DataFrame <- summarise.DataFrame
 
-
+#' @importFrom dplyr group_data
 #' @export
 dplyr::group_data
+
+#' @importFrom tibble tibble
 #' @export
 group_data.DataFrame <- function(.data) {
   group_attr <- attr(.data@listData, "groups")
@@ -245,13 +273,15 @@ group_data.DataFrame <- function(.data) {
     group_attr
   } else {
     rows <- list(seq_len(nrow(.data)))
-    tibble(`:=`(".rows", rows))
+    tibble::tibble(`:=`(".rows", rows))
   }
 }
 
-
+#' @importFrom dplyr group_vars
 #' @export
 dplyr::group_vars
+
+#' @importFrom rlang as_string
 #' @export
 group_vars.DataFrame <- function(x) {
   groups <- group_data(x)
@@ -261,14 +291,14 @@ group_vars.DataFrame <- function(x) {
   else if (is.data.frame(groups)) {
     head(names(groups), -1L)
   }
-  else if (is.list(groups)) {
-    purrr::map_chr(groups, rlang:::as_string)
-  }
 }
 
-
+#' @importFrom dplyr group_by
 #' @export
 dplyr::group_by
+
+#' @importFrom rlang quos quo_squash as_string syms
+#' @importFrom tibble as.tibble
 #' @export
 group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
 
@@ -279,23 +309,27 @@ group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_de
                      mutate(uniques, flag = seq_len(nrow(uniques))),
                      by = unlist(groupvars), sort = FALSE)
     groups <- split(as.integer(flagged$rowid), flagged$flag)
-    uniques <- dplyr::tbl_df(as.data.frame(uniques))
+    uniques <- tibble::as.tibble(as.data.frame(uniques))
     uniques$.rows <- unname(groups)
-    groupdata <- dplyr::arrange(uniques, !!!syms(unlist(groupvars)))
+    groupdata <- uniques[with(uniques, do.call(order, rlang::syms(groupvars))), ]
     attr(.data@listData, "groups") <- groupdata
   }
   .data
 }
 
-
+#' @importFrom dplyr ungroup
 #' @export
 dplyr::ungroup
+
 #' @export
 ungroup.DataFrame <- function(x, ...) {
   attr(x@listData, "groups") <- NULL
   x
 }
 
+#' @importFrom dplyr arrange
+#' @export
+dplyr::arrange
 
 #' @export
 dplyr::arrange
@@ -322,6 +356,10 @@ desc <- function(x) {
   -xtfrm(x)
 }
 
+#' @importFrom dplyr distinct
+#' @export
+dplyr::distinct
+
 #' @export
 dplyr::distinct
 #' @export
@@ -329,16 +367,26 @@ distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
   .data[!BiocGenerics::duplicated(.data), ]
 }
 
-
+#' @importFrom dplyr pull
+#' @export
+dplyr::pull
 
 #' @export
 dplyr::pull
 #' @export
-pull.DataFrame <- function(.data, var = -1) {
+pull.DataFrame <- function(.data, var = -1, name = NULL) {
   var <- tidyselect::vars_pull(names(.data), !!enquo(var))
-  .data[[var]]
+  name <- rlang::enquo(name)
+  if (rlang::quo_is_null(name)) {
+    return(.data[[var]])
+  }
+  name <- tidyselect::vars_pull(names(.data), !!name)
+  rlang::set_names(.data[[var]], nm = .data[[name]])
 }
 
+#' @importFrom dplyr slice
+#' @export
+dplyr::slice
 
 #' @export
 dplyr::slice
@@ -347,9 +395,9 @@ slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
   .data[..., ]
 }
 
-
+#' @keywords internal
 convert_with_group <- function(.data) {
-  t <- dplyr::tbl_df(.data)
+  t <- tibble::as_tibble(.data)
   if (!is.null(group_data(.data)) && nrow(group_data(.data)) > 1L) {
     for (gvar in group_vars(.data)) {
       t <- dplyr::group_by(t, !!sym(gvar), add = TRUE)
@@ -358,6 +406,7 @@ convert_with_group <- function(.data) {
   t
 }
 
+#' @keywords internal
 restore_DF <- function(.data, rn) {
   DF <- as(.data, "DataFrame")
   rownames(DF) <- rn
