@@ -48,27 +48,35 @@ format.DataFrame <- function(x, ...) {
 #' @export
 dplyr::filter
 
-#' @importFrom rlang quos eval_tidy
+#' @importFrom rlang quos eval_tidy quo_squash
+#' @importFrom S4Vectors groupInfo
 #' @export
-filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
+filter.DataFrame <- function(.data, ..., .preserve = FALSE, quiet = FALSE, ungroup = FALSE) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  groupvars <- group_vars(.data)
+  if (length(FNS) > 1L && !quiet)
+    message("Note that logial predicates will be applied in order provided.
+Refer ?DFplyr")
+  groupvars <- groupInfo(.data)
   if (length(groupvars) > 0L) {
-    groups <- group_data(.data)
-    split_data <- lapply(seq_len(nrow(groups)), function(x) {
-      .data_grp <- .data[groups$.rows[x][[1]], ,drop = FALSE]
-      for (f in seq_along(FNS)) {
-        .data_grp <- with(.data_grp, base::subset(.data_grp, rlang::eval_tidy(FNS[[f]])))
-      }
-      .data_grp
-    })
-    do.call(rbind, split_data)
+    split_data <- split(.data, .data[groupvars])
+    for (f in seq_along(FNS)) {
+      split_data <- lapply(split_data, function(xx) {
+        if (nrow(xx) == 0L)
+          return(xx[NULL,])
+        with(xx, subset(xx, rlang::eval_tidy(FNS[[f]])))
+      })
+    }
+    .data <- do.call(rbind, split_data)
   } else {
     for (f in seq_along(FNS)) {
-      .data <- with(.data, base::subset(.data, rlang::eval_tidy(FNS[[f]])))
+      .data <- with(.data, subset(.data, rlang::eval_tidy(FNS[[f]])))
     }
     .data
   }
+  if (ungroup) {
+    .data <- ungroup(.data)
+  }
+  .data
 }
 
 top_n_rank <- function (n, wt) {
@@ -86,29 +94,32 @@ dplyr::mutate
 
 #' @importFrom rlang quos quo_squash
 #' @export
-mutate.DataFrame <- function(.data, ...) {
+mutate.DataFrame <- function(.data, ..., ungroup = FALSE) {
 
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-
-  groupvars <- group_vars(.data)
+  groupvars <- groupInfo(.data)
   if (length(groupvars) > 0L) {
-    groups <- group_data(.data)
-    split_data <- lapply(seq_len(nrow(groups)), function(x) {
-      .data_grp <- .data[groups$.rows[x][[1]], ,drop = FALSE]
-      mutate_internal(.data_grp, FNS, rlang::quos(...))
+    split_data <- split(.data, .data[groupvars])
+    split_data <- lapply(split_data, function(xx) {
+      if (nrow(xx) == 0L)
+        return(xx[NULL,])
+      mutate_internal(xx, FNS, rlang::quos(...))
     })
-    do.call(rbind, split_data)
+    .data <- do.call(rbind, split_data)
   } else {
-    mutate_internal(.data, FNS, rlang::quos(...))
+    .data <-  mutate_internal(.data, FNS, rlang::quos(...))
   }
-
+  if (ungroup) {
+    .data <- ungroup(.data)
+  }
+  .data
 }
 
 #' @importFrom rlang eval_tidy quo_get_env
 mutate_internal <- function(.data, FUNS, quos) {
-  op <- options("useFancyQuotes")
-  on.exit(options(op))
-  options(useFancyQuotes = FALSE)
+  # op <- options("useFancyQuotes")
+  # on.exit(options(op))
+  # options(useFancyQuotes = FALSE)
 
   ## hack: inject the local env with the scoped data,
   ## excluding data that was already here.
@@ -323,7 +334,7 @@ dplyr::ungroup
 
 #' @export
 ungroup.DataFrame <- function(x, ...) {
-  attr(x@listData, "groups") <- NULL
+  S4Vectors::groupInfo(x) <- NULL
   x
 }
 
