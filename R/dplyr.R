@@ -49,13 +49,16 @@ format.DataFrame <- function(x, ...) {
 dplyr::filter
 
 #' @importFrom rlang quos eval_tidy quo_squash
-#' @importFrom S4Vectors groupInfo
+#' @importFrom S4Vectors groupInfo subset
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE, quiet = FALSE, ungroup = FALSE) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
   if (length(FNS) > 1L && !quiet)
     message("Note that logial predicates will be applied in order provided.
 Refer ?DFplyr")
+  if (any(names(FNS) %in% names(.data))) {
+    message("Arguments should not be named. Do you mean to use `==`?")
+  }
   groupvars <- groupInfo(.data)
   if (length(groupvars) > 0L) {
     split_data <- split(.data, .data[groupvars])
@@ -69,7 +72,7 @@ Refer ?DFplyr")
     .data <- do.call(rbind, split_data)
   } else {
     for (f in seq_along(FNS)) {
-      .data <- with(.data, subset(.data, rlang::eval_tidy(FNS[[f]])))
+      .data <- with(.data, S4Vectors::subset(.data, rlang::eval_tidy(FNS[[f]])))
     }
     .data
   }
@@ -93,11 +96,12 @@ top_n_rank <- function (n, wt) {
 dplyr::mutate
 
 #' @importFrom rlang quos quo_squash
+#' @importFrom S4Vectors groupInfo subset
 #' @export
 mutate.DataFrame <- function(.data, ..., ungroup = FALSE) {
 
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  groupvars <- groupInfo(.data)
+  groupvars <- S4Vectors::groupInfo(.data)
   if (length(groupvars) > 0L) {
     split_data <- split(.data, .data[groupvars])
     split_data <- lapply(split_data, function(xx) {
@@ -117,10 +121,6 @@ mutate.DataFrame <- function(.data, ..., ungroup = FALSE) {
 
 #' @importFrom rlang eval_tidy quo_get_env
 mutate_internal <- function(.data, FUNS, quos) {
-  # op <- options("useFancyQuotes")
-  # on.exit(options(op))
-  # options(useFancyQuotes = FALSE)
-
   ## hack: inject the local env with the scoped data,
   ## excluding data that was already here.
   scope_env <- rlang::quo_get_env(quos[[1]])
@@ -132,7 +132,6 @@ mutate_internal <- function(.data, FUNS, quos) {
     FUNS_obj <- with(.data, eval(rlang::eval_tidy(FUNS[[x]])))
     if (!inherits(FUNS_obj, "numeric")) {
       sprintf('%s <- %s', x, paste0(deparse(FUNS_expl), collapse = ""))
-      # sprintf('%s <- c(%s)', x, paste0(sQuote(FUNS_expl), collapse = ", "))
     } else {
       sprintf('%s <- c(%s)', x, paste0(FUNS_expl, collapse = ", "))
     }
@@ -158,7 +157,7 @@ dplyr::select
 #' @export
 select.DataFrame <- function(.data, ...) {
   dotnames <- names(rlang::exprs(...))
-  .data <- base::subset(.data,
+  .data <- S4Vectors::subset(.data,
                   select = unlist(lapply(
                     rlang::quos(...),
                     function(x){rlang::eval_tidy(rlang::quo_squash(x))})
