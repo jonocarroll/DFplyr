@@ -236,7 +236,7 @@ group_by_drop_default.DataFrame <- function(.tbl) {
 #' @importFrom dplyr summarise summarize
 #' @export
 dplyr::summarise
-dplyr::summarise
+dplyr::summarize
 
 #' @importFrom rlang quos quo_squash eval_tidy
 #' @export
