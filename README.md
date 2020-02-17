@@ -47,33 +47,33 @@ d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width=10))
 d$grY <- GenomicRanges::GRanges("chrY", IRanges::IRanges(1:32, width = 10))
 d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
 d
-#> dplyr-compatible DataFrame with 32 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                          grX        grY                    nl
-#>                    <GRanges>  <GRanges>         <NumericList>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36
-#> ...                      ...        ...                   ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...
+#> DataFrame with 32 rows and 8 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                 6       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag             6       110         1         4       160  chrX:2-11
+#> Datsun 710                4        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258  chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa              4       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino              6       175         1         5     145.0 chrX:30-39
+#> Maserati Bora             8       335         1         5     301.0 chrX:31-40
+#> Volvo 142E                4       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl
+#>                    <GRanges>         <NumericList>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81
+#> ...                      ...                   ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...
 ```
 
 This will appear in RStudio’s environment pane as a `Formal class
@@ -88,149 +88,123 @@ result in the new columns being created in alphabetical order
 
 ``` r
 mutate(d, newvar = cyl + hp)
-#> dplyr-compatible DataFrame with 32 rows and 9 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                          grX        grY                    nl    newvar
-#>                    <GRanges>  <GRanges>         <NumericList> <numeric>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...       116
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...       116
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...        97
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05       116
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36       183
-#> ...                      ...        ...                   ...       ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...       117
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...       272
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...       181
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...       343
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...       113
+#> DataFrame with 32 rows and 9 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                 6       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag             6       110         1         4       160  chrX:2-11
+#> Datsun 710                4        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258  chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa              4       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino              6       175         1         5     145.0 chrX:30-39
+#> Maserati Bora             8       335         1         5     301.0 chrX:31-40
+#> Volvo 142E                4       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl    newvar
+#>                    <GRanges>         <NumericList> <numeric>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...       116
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...       116
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...        97
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37       116
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81       183
+#> ...                      ...                   ...       ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...       117
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...       272
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...       181
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...       343
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...       113
 
 mutate(d, nl2 = nl * 2)
-#> dplyr-compatible DataFrame with 32 rows and 9 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                          grX        grY                    nl
-#>                    <GRanges>  <GRanges>         <NumericList>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36
-#> ...                      ...        ...                   ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...
-#>                                     nl2
-#>                           <NumericList>
-#> Mazda RX4         -3.28,-4.08,-2.38,...
-#> Mazda RX4 Wag        2.28,0.38,0.56,...
-#> Datsun 710          0.06,0.62,-1.84,...
-#> Hornet 4 Drive           2.58,4.56,-4.1
-#> Hornet Sportabout        -2.52,1.9,0.72
-#> ...                                 ...
-#> Lotus Europa        -1.78,2.22,1.18,...
-#> Ford Pantera L      2.68,0.04,-1.32,...
-#> Ferrari Dino       -1.26,-0.2,-0.32,...
-#> Maserati Bora       4.06,-1.38,1.42,...
-#> Volvo 142E           0.26,-0.26,0.1,...
+#> DataFrame with 32 rows and 9 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                 6       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag             6       110         1         4       160  chrX:2-11
+#> Datsun 710                4        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258  chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa              4       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino              6       175         1         5     145.0 chrX:30-39
+#> Maserati Bora             8       335         1         5     301.0 chrX:31-40
+#> Volvo 142E                4       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl                   nl2
+#>                    <GRanges>         <NumericList>         <NumericList>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...    1.10,2.38,1.82,...
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,... -2.34, 0.04, 1.06,...
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...  1.08,-1.86, 0.74,...
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37      0.02, 0.14,-0.74
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81      0.54,-1.88,-1.62
+#> ...                      ...                   ...                   ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...  1.38,-3.16,-0.10,...
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...  0.94, 0.54,-0.82,...
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...  1.90,-0.28, 2.42,...
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...  4.78, 0.08,-4.04,...
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,... -1.94,-1.08,-1.86,...
 
 mutate(d, length_nl = lengths(nl))
-#> dplyr-compatible DataFrame with 32 rows and 9 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                          grX        grY                    nl length_nl
-#>                    <GRanges>  <GRanges>         <NumericList> <integer>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...         4
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...         4
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...         4
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05         3
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36         3
-#> ...                      ...        ...                   ...       ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...         5
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...         5
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...         5
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...         5
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...         4
+#> DataFrame with 32 rows and 9 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                 6       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag             6       110         1         4       160  chrX:2-11
+#> Datsun 710                4        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258  chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa              4       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino              6       175         1         5     145.0 chrX:30-39
+#> Maserati Bora             8       335         1         5     301.0 chrX:31-40
+#> Volvo 142E                4       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl length_nl
+#>                    <GRanges>         <NumericList> <integer>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...         4
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...         4
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...         4
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37         3
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81         3
+#> ...                      ...                   ...       ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...         5
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...         5
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...         5
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...         5
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...         4
 
 mutate(d, 
        chr = GenomeInfoDb::seqnames(grX), 
        strand_X = BiocGenerics::strand(grX), 
        end_X = BiocGenerics::end(grX))
-#> dplyr-compatible DataFrame with 32 rows and 11 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                          grX        grY                    nl   chr
-#>                    <GRanges>  <GRanges>         <NumericList> <Rle>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...  chrX
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...  chrX
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...  chrX
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05  chrX
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36  chrX
-#> ...                      ...        ...                   ...   ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...  chrX
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...  chrX
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...  chrX
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...  chrX
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...  chrX
-#>                       end_X strand_X
-#>                   <integer>    <Rle>
-#> Mazda RX4                10        *
-#> Mazda RX4 Wag            11        *
-#> Datsun 710               12        *
-#> Hornet 4 Drive           13        *
-#> Hornet Sportabout        14        *
-#> ...                     ...      ...
-#> Lotus Europa             37        *
-#> Ford Pantera L           38        *
-#> Ferrari Dino             39        *
-#> Maserati Bora            40        *
-#> Volvo 142E               41        *
+#> DataFrame with 32 rows and 11 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                 6       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag             6       110         1         4       160  chrX:2-11
+#> Datsun 710                4        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258  chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa              4       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino              6       175         1         5     145.0 chrX:30-39
+#> Maserati Bora             8       335         1         5     301.0 chrX:31-40
+#> Volvo 142E                4       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl   chr     end_X strand_X
+#>                    <GRanges>         <NumericList> <Rle> <integer>    <Rle>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...  chrX        10        *
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...  chrX        11        *
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...  chrX        12        *
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37  chrX        13        *
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81  chrX        14        *
+#> ...                      ...                   ...   ...       ...      ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...  chrX        37        *
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...  chrX        38        *
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...  chrX        39        *
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...  chrX        40        *
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...  chrX        41        *
 ```
 
 the object returned remains a standard `DataFrame`, and further calls
@@ -239,70 +213,70 @@ can be piped with `%>%`
 ``` r
 mutate(d, newvar = cyl + hp) %>%
   pull(newvar)
-#>  [1] 116 116  97 116 183 111 253  66  99 129 129 188 188 188 213 223 238
-#> [18]  70  56  69 101 158 158 253 183  70  95 117 272 181 343 113
+#>  [1] 116 116  97 116 183 111 253  66  99 129 129 188 188 188 213 223 238  70  56
+#> [20]  69 101 158 158 253 183  70  95 117 272 181 343 113
 ```
 
 Some of the variants of the `dplyr` verbs also work
 
 ``` r
 mutate_if(d, is.numeric, ~.^2)
-#> dplyr-compatible DataFrame with 32 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                36     12100         1        16     25600
-#> Mazda RX4 Wag            36     12100         1        16     25600
-#> Datsun 710               16      8649         1        16     11664
-#> Hornet 4 Drive           36     12100         0         9     66564
-#> Hornet Sportabout        64     30625         0         9    129600
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa             16     12769         1        25   9044.01
-#> Ford Pantera L           64     69696         1        25    123201
-#> Ferrari Dino             36     30625         1        25     21025
-#> Maserati Bora            64    112225         1        25     90601
-#> Volvo 142E               16     11881         1        16     14641
-#>                          grX        grY                    nl
-#>                    <GRanges>  <GRanges>         <NumericList>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36
-#> ...                      ...        ...                   ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...
+#> DataFrame with 32 rows and 8 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                36     12100         1        16     25600  chrX:1-10
+#> Mazda RX4 Wag            36     12100         1        16     25600  chrX:2-11
+#> Datsun 710               16      8649         1        16     11664  chrX:3-12
+#> Hornet 4 Drive           36     12100         0         9     66564  chrX:4-13
+#> Hornet Sportabout        64     30625         0         9    129600  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa             16     12769         1        25   9044.01 chrX:28-37
+#> Ford Pantera L           64     69696         1        25 123201.00 chrX:29-38
+#> Ferrari Dino             36     30625         1        25  21025.00 chrX:30-39
+#> Maserati Bora            64    112225         1        25  90601.00 chrX:31-40
+#> Volvo 142E               16     11881         1        16  14641.00 chrX:32-41
+#>                          grY                    nl
+#>                    <GRanges>         <NumericList>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81
+#> ...                      ...                   ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...
 
 mutate_if(d, ~inherits(., "GRanges"), BiocGenerics::start)
-#> dplyr-compatible DataFrame with 32 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                         grX       grY                    nl
-#>                   <integer> <integer>         <NumericList>
-#> Mazda RX4                 1         1 -1.64,-2.04,-1.19,...
-#> Mazda RX4 Wag             2         2    1.14,0.19,0.28,...
-#> Datsun 710                3         3   0.03,0.31,-0.92,...
-#> Hornet 4 Drive            4         4       1.29,2.28,-2.05
-#> Hornet Sportabout         5         5       -1.26,0.95,0.36
-#> ...                     ...       ...                   ...
-#> Lotus Europa             28        28   -0.89,1.11,0.59,...
-#> Ford Pantera L           29        29   1.34,0.02,-0.66,...
-#> Ferrari Dino             30        30  -0.63,-0.1,-0.16,...
-#> Maserati Bora            31        31   2.03,-0.69,0.71,...
-#> Volvo 142E               32        32   0.13,-0.13,0.05,...
+#> DataFrame with 32 rows and 8 columns
+#>                         cyl        hp        am      gear      disp       grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric> <integer>
+#> Mazda RX4                 6       110         1         4       160         1
+#> Mazda RX4 Wag             6       110         1         4       160         2
+#> Datsun 710                4        93         1         4       108         3
+#> Hornet 4 Drive            6       110         0         3       258         4
+#> Hornet Sportabout         8       175         0         3       360         5
+#> ...                     ...       ...       ...       ...       ...       ...
+#> Lotus Europa              4       113         1         5      95.1        28
+#> Ford Pantera L            8       264         1         5     351.0        29
+#> Ferrari Dino              6       175         1         5     145.0        30
+#> Maserati Bora             8       335         1         5     301.0        31
+#> Volvo 142E                4       109         1         4     121.0        32
+#>                         grY                    nl
+#>                   <integer>         <NumericList>
+#> Mazda RX4                 1    0.55,1.19,0.91,...
+#> Mazda RX4 Wag             2 -1.17, 0.02, 0.53,...
+#> Datsun 710                3  0.54,-0.93, 0.37,...
+#> Hornet 4 Drive            4      0.01, 0.07,-0.37
+#> Hornet Sportabout         5      0.27,-0.94,-0.81
+#> ...                     ...                   ...
+#> Lotus Europa             28  0.69,-1.58,-0.05,...
+#> Ford Pantera L           29  0.47, 0.27,-0.41,...
+#> Ferrari Dino             30  0.95,-0.14, 1.21,...
+#> Maserati Bora            31  2.39, 0.04,-2.02,...
+#> Volvo 142E               32 -0.97,-0.54,-0.93,...
 ```
 
 Use of `tidyselect` helpers is limited to within `dplyr::vars()` calls
@@ -310,36 +284,36 @@ and using the `_at` variants
 
 ``` r
 mutate_at(d, vars(starts_with("c")), ~.^2)
-#> dplyr-compatible DataFrame with 32 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                36       110         1         4       160
-#> Mazda RX4 Wag            36       110         1         4       160
-#> Datsun 710               16        93         1         4       108
-#> Hornet 4 Drive           36       110         0         3       258
-#> Hornet Sportabout        64       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa             16       113         1         5      95.1
-#> Ford Pantera L           64       264         1         5       351
-#> Ferrari Dino             36       175         1         5       145
-#> Maserati Bora            64       335         1         5       301
-#> Volvo 142E               16       109         1         4       121
-#>                          grX        grY                    nl
-#>                    <GRanges>  <GRanges>         <NumericList>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36
-#> ...                      ...        ...                   ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...
+#> DataFrame with 32 rows and 8 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                36       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag            36       110         1         4       160  chrX:2-11
+#> Datsun 710               16        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive           36       110         0         3       258  chrX:4-13
+#> Hornet Sportabout        64       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa             16       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L           64       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino             36       175         1         5     145.0 chrX:30-39
+#> Maserati Bora            64       335         1         5     301.0 chrX:31-40
+#> Volvo 142E               16       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl
+#>                    <GRanges>         <NumericList>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81
+#> ...                      ...                   ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...
 
 select_at(d, vars(starts_with("gr")))
-#> dplyr-compatible DataFrame with 32 rows and 2 columns
+#> DataFrame with 32 rows and 2 columns
 #>                          grX        grY
 #>                    <GRanges>  <GRanges>
 #> Mazda RX4          chrX:1-10  chrY:1-10
@@ -361,48 +335,37 @@ these are implemented specifically for `DFplyr`
 
 ``` r
 group_by(d, cyl, am)
-#> dplyr-compatible DataFrame with 32 rows and 8 columns
+#> DataFrame with 32 rows and 8 columns
 #> Groups:  cyl, am 
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                          grX        grY                    nl
-#>                    <GRanges>  <GRanges>         <NumericList>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36
-#> ...                      ...        ...                   ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                 6       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag             6       110         1         4       160  chrX:2-11
+#> Datsun 710                4        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258  chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa              4       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino              6       175         1         5     145.0 chrX:30-39
+#> Maserati Bora             8       335         1         5     301.0 chrX:31-40
+#> Volvo 142E                4       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl
+#>                    <GRanges>         <NumericList>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81
+#> ...                      ...                   ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...
 
-group_by(d, cyl) %>% 
-  top_n(1, disp)
-#> dplyr-compatible DataFrame with 3 rows and 8 columns
-#>                          cyl        hp        am      gear      disp
-#>                    <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Merc 240D                  4        62         0         4     146.7
-#> Hornet 4 Drive             6       110         0         3       258
-#> Cadillac Fleetwood         8       205         0         3       472
-#>                           grX        grY                   nl
-#>                     <GRanges>  <GRanges>        <NumericList>
-#> Merc 240D           chrX:8-17  chrY:8-17 -1.55,-0.57,0.19,...
-#> Hornet 4 Drive      chrX:4-13  chrY:4-13      1.29,2.28,-2.05
-#> Cadillac Fleetwood chrX:15-24 chrY:15-24    -0.81,-1.12,-0.67
+# group_by(d, cyl) %>% 
+#   top_n(1, disp)
 ```
 
 Other verbs are similiarly implemented, and preserve row names where
@@ -410,7 +373,7 @@ possible
 
 ``` r
 select(d, am, cyl)
-#> dplyr-compatible DataFrame with 32 rows and 2 columns
+#> DataFrame with 32 rows and 2 columns
 #>                          am       cyl
 #>                   <numeric> <numeric>
 #> Mazda RX4                 1         6
@@ -426,8 +389,8 @@ select(d, am, cyl)
 #> Volvo 142E                1         4
 
 select(d, am, cyl) %>%
-  rename(foo = am)
-#> dplyr-compatible DataFrame with 32 rows and 2 columns
+  DFplyr::rename(foo = am)
+#> DataFrame with 32 rows and 2 columns
 #>                         foo       cyl
 #>                   <numeric> <numeric>
 #> Mazda RX4                 1         6
@@ -443,77 +406,77 @@ select(d, am, cyl) %>%
 #> Volvo 142E                1         4
 
 arrange(d, desc(hp))
-#> dplyr-compatible DataFrame with 32 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Maserati Bora             8       335         1         5       301
-#> Ford Pantera L            8       264         1         5       351
-#> Duster 360                8       245         0         3       360
-#> Camaro Z28                8       245         0         3       350
-#> Chrysler Imperial         8       230         0         3       440
-#> ...                     ...       ...       ...       ...       ...
-#> Fiat 128                  4        66         1         4      78.7
-#> Fiat X1-9                 4        66         1         4        79
-#> Toyota Corolla            4        65         1         4      71.1
-#> Merc 240D                 4        62         0         4     146.7
-#> Honda Civic               4        52         1         4      75.7
-#>                          grX        grY                   nl
-#>                    <GRanges>  <GRanges>        <NumericList>
-#> Maserati Bora     chrX:31-40 chrY:31-40  2.03,-0.69,0.71,...
-#> Ford Pantera L    chrX:29-38 chrY:29-38  1.34,0.02,-0.66,...
-#> Duster 360         chrX:7-16  chrY:7-16     -0.26,-0.09,0.15
-#> Camaro Z28        chrX:24-33 chrY:24-33      -0.32,1.28,0.14
-#> Chrysler Imperial chrX:17-26 chrY:17-26     -0.35,1.85,-0.56
-#> ...                      ...        ...                  ...
-#> Fiat 128          chrX:18-27 chrY:18-27 -0.09,-0.6,-2.08,...
-#> Fiat X1-9         chrX:26-35 chrY:26-35  0.57,-1.87,0.14,...
-#> Toyota Corolla    chrX:20-29 chrY:20-29  -1.75,0.48,0.12,...
-#> Merc 240D          chrX:8-17  chrY:8-17 -1.55,-0.57,0.19,...
-#> Honda Civic       chrX:19-28 chrY:19-28  -0.37,-0.02,1.7,...
+#> DataFrame with 32 rows and 8 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Maserati Bora             8       335         1         5       301 chrX:31-40
+#> Ford Pantera L            8       264         1         5       351 chrX:29-38
+#> Duster 360                8       245         0         3       360  chrX:7-16
+#> Camaro Z28                8       245         0         3       350 chrX:24-33
+#> Chrysler Imperial         8       230         0         3       440 chrX:17-26
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Fiat 128                  4        66         1         4      78.7 chrX:18-27
+#> Fiat X1-9                 4        66         1         4      79.0 chrX:26-35
+#> Toyota Corolla            4        65         1         4      71.1 chrX:20-29
+#> Merc 240D                 4        62         0         4     146.7  chrX:8-17
+#> Honda Civic               4        52         1         4      75.7 chrX:19-28
+#>                          grY                    nl
+#>                    <GRanges>         <NumericList>
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...
+#> Duster 360         chrY:7-16      1.28,-1.67, 0.31
+#> Camaro Z28        chrY:24-33      0.82,-1.24,-0.06
+#> Chrysler Imperial chrY:17-26      0.23, 0.07,-0.72
+#> ...                      ...                   ...
+#> Fiat 128          chrY:18-27 -0.26, 0.83,-0.09,...
+#> Fiat X1-9         chrY:26-35 -0.75, 0.73,-1.16,...
+#> Toyota Corolla    chrY:20-29 -0.80, 0.58,-0.51,...
+#> Merc 240D          chrY:8-17  1.26, 1.12,-1.27,...
+#> Honda Civic       chrY:19-28    1.50,0.84,0.42,...
 
 filter(d, am == 0) 
-#> dplyr-compatible DataFrame with 19 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> Valiant                   6       105         0         3       225
-#> Duster 360                8       245         0         3       360
-#> Merc 240D                 4        62         0         4     146.7
-#> ...                     ...       ...       ...       ...       ...
-#> Toyota Corona             4        97         0         3     120.1
-#> Dodge Challenger          8       150         0         3       318
-#> AMC Javelin               8       150         0         3       304
-#> Camaro Z28                8       245         0         3       350
-#> Pontiac Firebird          8       175         0         3       400
-#>                          grX        grY                   nl
-#>                    <GRanges>  <GRanges>        <NumericList>
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13      1.29,2.28,-2.05
-#> Hornet Sportabout  chrX:5-14  chrY:5-14      -1.26,0.95,0.36
-#> Valiant            chrX:6-15  chrY:6-15       0.89,-0.48,0.7
-#> Duster 360         chrX:7-16  chrY:7-16     -0.26,-0.09,0.15
-#> Merc 240D          chrX:8-17  chrY:8-17 -1.55,-0.57,0.19,...
-#> ...                      ...        ...                  ...
-#> Toyota Corona     chrX:21-30 chrY:21-30     -0.57,-1.7,-1.58
-#> Dodge Challenger  chrX:22-31 chrY:22-31      1.07,2.18,-0.97
-#> AMC Javelin       chrX:23-32 chrY:23-32       -1.26,-0.6,0.5
-#> Camaro Z28        chrX:24-33 chrY:24-33      -0.32,1.28,0.14
-#> Pontiac Firebird  chrX:25-34 chrY:25-34      1.27,-0.04,1.09
+#> DataFrame with 19 rows and 8 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Hornet 4 Drive            6       110         0         3     258.0  chrX:4-13
+#> Hornet Sportabout         8       175         0         3     360.0  chrX:5-14
+#> Valiant                   6       105         0         3     225.0  chrX:6-15
+#> Duster 360                8       245         0         3     360.0  chrX:7-16
+#> Merc 240D                 4        62         0         4     146.7  chrX:8-17
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Toyota Corona             4        97         0         3     120.1 chrX:21-30
+#> Dodge Challenger          8       150         0         3     318.0 chrX:22-31
+#> AMC Javelin               8       150         0         3     304.0 chrX:23-32
+#> Camaro Z28                8       245         0         3     350.0 chrX:24-33
+#> Pontiac Firebird          8       175         0         3     400.0 chrX:25-34
+#>                          grY                    nl
+#>                    <GRanges>         <NumericList>
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81
+#> Valiant            chrY:6-15      0.81,-0.06, 0.15
+#> Duster 360         chrY:7-16      1.28,-1.67, 0.31
+#> Merc 240D          chrY:8-17  1.26, 1.12,-1.27,...
+#> ...                      ...                   ...
+#> Toyota Corona     chrY:21-30     -0.79,-0.51, 0.51
+#> Dodge Challenger  chrY:22-31      0.37,-0.07,-0.21
+#> AMC Javelin       chrY:23-32     -0.86, 1.21,-1.37
+#> Camaro Z28        chrY:24-33      0.82,-1.24,-0.06
+#> Pontiac Firebird  chrY:25-34     -1.34, 0.41,-0.89
 
 slice(d, 3:6)
-#> dplyr-compatible DataFrame with 4 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> Valiant                   6       105         0         3       225
-#>                         grX       grY                  nl
-#>                   <GRanges> <GRanges>       <NumericList>
-#> Datsun 710        chrX:3-12 chrY:3-12 0.03,0.31,-0.92,...
-#> Hornet 4 Drive    chrX:4-13 chrY:4-13     1.29,2.28,-2.05
-#> Hornet Sportabout chrX:5-14 chrY:5-14     -1.26,0.95,0.36
-#> Valiant           chrX:6-15 chrY:6-15      0.89,-0.48,0.7
+#> DataFrame with 4 rows and 8 columns
+#>                         cyl        hp        am      gear      disp       grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric> <GRanges>
+#> Datsun 710                4        93         1         4       108 chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258 chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360 chrX:5-14
+#> Valiant                   6       105         0         3       225 chrX:6-15
+#>                         grY                    nl
+#>                   <GRanges>         <NumericList>
+#> Datsun 710        chrY:3-12  0.54,-0.93, 0.37,...
+#> Hornet 4 Drive    chrY:4-13      0.01, 0.07,-0.37
+#> Hornet Sportabout chrY:5-14      0.27,-0.94,-0.81
+#> Valiant           chrY:6-15      0.81,-0.06, 0.15
 
 # dd <- rbind(data.frame(d[1, ], row.names = "MyCar"), d)
 # dd
@@ -526,37 +489,37 @@ de-duplication method, in the case of `distinct`, this is via
 
 ``` r
 distinct(d)
-#> dplyr-compatible DataFrame with 32 rows and 8 columns
-#>                         cyl        hp        am      gear      disp
-#>                   <numeric> <numeric> <numeric> <numeric> <numeric>
-#> Mazda RX4                 6       110         1         4       160
-#> Mazda RX4 Wag             6       110         1         4       160
-#> Datsun 710                4        93         1         4       108
-#> Hornet 4 Drive            6       110         0         3       258
-#> Hornet Sportabout         8       175         0         3       360
-#> ...                     ...       ...       ...       ...       ...
-#> Lotus Europa              4       113         1         5      95.1
-#> Ford Pantera L            8       264         1         5       351
-#> Ferrari Dino              6       175         1         5       145
-#> Maserati Bora             8       335         1         5       301
-#> Volvo 142E                4       109         1         4       121
-#>                          grX        grY                    nl
-#>                    <GRanges>  <GRanges>         <NumericList>
-#> Mazda RX4          chrX:1-10  chrY:1-10 -1.64,-2.04,-1.19,...
-#> Mazda RX4 Wag      chrX:2-11  chrY:2-11    1.14,0.19,0.28,...
-#> Datsun 710         chrX:3-12  chrY:3-12   0.03,0.31,-0.92,...
-#> Hornet 4 Drive     chrX:4-13  chrY:4-13       1.29,2.28,-2.05
-#> Hornet Sportabout  chrX:5-14  chrY:5-14       -1.26,0.95,0.36
-#> ...                      ...        ...                   ...
-#> Lotus Europa      chrX:28-37 chrY:28-37   -0.89,1.11,0.59,...
-#> Ford Pantera L    chrX:29-38 chrY:29-38   1.34,0.02,-0.66,...
-#> Ferrari Dino      chrX:30-39 chrY:30-39  -0.63,-0.1,-0.16,...
-#> Maserati Bora     chrX:31-40 chrY:31-40   2.03,-0.69,0.71,...
-#> Volvo 142E        chrX:32-41 chrY:32-41   0.13,-0.13,0.05,...
+#> DataFrame with 32 rows and 8 columns
+#>                         cyl        hp        am      gear      disp        grX
+#>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
+#> Mazda RX4                 6       110         1         4       160  chrX:1-10
+#> Mazda RX4 Wag             6       110         1         4       160  chrX:2-11
+#> Datsun 710                4        93         1         4       108  chrX:3-12
+#> Hornet 4 Drive            6       110         0         3       258  chrX:4-13
+#> Hornet Sportabout         8       175         0         3       360  chrX:5-14
+#> ...                     ...       ...       ...       ...       ...        ...
+#> Lotus Europa              4       113         1         5      95.1 chrX:28-37
+#> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
+#> Ferrari Dino              6       175         1         5     145.0 chrX:30-39
+#> Maserati Bora             8       335         1         5     301.0 chrX:31-40
+#> Volvo 142E                4       109         1         4     121.0 chrX:32-41
+#>                          grY                    nl
+#>                    <GRanges>         <NumericList>
+#> Mazda RX4          chrY:1-10    0.55,1.19,0.91,...
+#> Mazda RX4 Wag      chrY:2-11 -1.17, 0.02, 0.53,...
+#> Datsun 710         chrY:3-12  0.54,-0.93, 0.37,...
+#> Hornet 4 Drive     chrY:4-13      0.01, 0.07,-0.37
+#> Hornet Sportabout  chrY:5-14      0.27,-0.94,-0.81
+#> ...                      ...                   ...
+#> Lotus Europa      chrY:28-37  0.69,-1.58,-0.05,...
+#> Ford Pantera L    chrY:29-38  0.47, 0.27,-0.41,...
+#> Ferrari Dino      chrY:30-39  0.95,-0.14, 1.21,...
+#> Maserati Bora     chrY:31-40  2.39, 0.04,-2.02,...
+#> Volvo 142E        chrY:32-41 -0.97,-0.54,-0.93,...
 
 group_by(d, cyl, am) %>%
   tally(gear)
-#> dplyr-compatible DataFrame with 6 rows and 3 columns
+#> DataFrame with 6 rows and 3 columns
 #>         cyl        am         n
 #>   <numeric> <numeric> <numeric>
 #> 1         4         0        11
@@ -567,20 +530,19 @@ group_by(d, cyl, am) %>%
 #> 6         8         1        10
 
 count(d, gear, am, cyl)
-#> dplyr-compatible DataFrame with 18 rows and 4 columns
-#>         gear    am   cyl         n
-#>     <factor> <Rle> <Rle> <integer>
-#> 1          3     0     4         1
-#> 2          4     0     4         2
-#> 3          5     0     4         0
-#> 4          3     1     4         0
-#> 5          4     1     4         6
-#> ...      ...   ...   ...       ...
-#> 14         4     0     8         0
-#> 15         5     0     8         0
-#> 16         3     1     8         0
-#> 17         4     1     8         0
-#> 18         5     1     8         2
+#> DataFrame with 10 rows and 4 columns
+#>        gear    am   cyl         n
+#>    <factor> <Rle> <Rle> <integer>
+#> 1         3     0     4         1
+#> 2         3     0     6         2
+#> 3         3     0     8        12
+#> 4         4     0     4         2
+#> 5         4     0     6         2
+#> 6         4     1     4         6
+#> 7         4     1     6         2
+#> 8         5     1     4         2
+#> 9         5     1     6         1
+#> 10        5     1     8         2
 ```
 
 `ggplot2` support is also enabled

@@ -100,7 +100,6 @@ the `_at` variants
 mutate_at(d, vars(starts_with("c")), ~.^2)
 
 select_at(d, vars(starts_with("gr")))
-
 ```
 
 Importantly, grouped operations are supported. `DataFrame` does not 
@@ -110,8 +109,8 @@ are implemented specifically for `DFplyr`
 ```{r}
 group_by(d, cyl, am)
 
-group_by(d, cyl) %>% 
-  top_n(1, disp)
+# group_by(d, cyl) %>% 
+#   top_n(1, disp)
 ```
 
 Other verbs are similiarly implemented, and preserve row names where possible
@@ -120,7 +119,7 @@ Other verbs are similiarly implemented, and preserve row names where possible
 select(d, am, cyl)
 
 select(d, am, cyl) %>%
-  rename(foo = am)
+  DFplyr::rename(foo = am)
 
 arrange(d, desc(hp))
 

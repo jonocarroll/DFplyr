@@ -1,39 +1,35 @@
 
-.show_DF <- function(object) {
+.show_DF <- function(x) {
   nhead <- S4Vectors::get_showHeadLines()
   ntail <- S4Vectors::get_showTailLines()
-  nr <- nrow(object)
-  nc <- ncol(object)
-  cat("dplyr-compatible DataFrame", " with ",
-      nr, " row", ifelse(nr == 1L, "", "s"),
+  x_nrow <- nrow(x)
+  x_ncol <- ncol(x)
+  cat(S4Vectors::classNameForDisplay(x), " with ",
+      x_nrow, " row", ifelse(x_nrow == 1L, "", "s"),
       " and ",
-      nc, " column", ifelse(nc == 1L, "", "s"),
+      x_ncol, " column", ifelse(x_ncol == 1L, "", "s"),
       "\n", sep="")
-  if (!is.null(group_data(object)) & nrow(group_data(object)) > 1L) {
-    cat("Groups: ", toString(group_vars(object)), "\n")
+  if (!is.null(group_data(x)) & nrow(group_data(x)) > 1L) {
+    cat("Groups: ", toString(group_vars(x)), "\n")
   }
-  if (nr > 0 && nc > 0) {
-    nms <- rownames(object)
-    if (nr <= (nhead + ntail + 1L)) {
-      out <- as.matrix(format(as.data.frame(lapply(object,
-                                                   showAsCell), optional = TRUE)))
-      if (!is.null(nms))
-        rownames(out) <- nms
+  if (x_nrow != 0L && x_ncol != 0L) {
+    x_rownames <- rownames(x)
+    if (x_nrow <= nhead + ntail + 1L) {
+      m <- S4Vectors:::makeNakedCharacterMatrixForDisplay(x)
+      if (!is.null(x_rownames))
+        rownames(m) <- x_rownames
+    } else {
+      m <- rbind(S4Vectors:::makeNakedCharacterMatrixForDisplay(head(x, nhead)),
+                 rbind(rep.int("...", x_ncol)),
+                 S4Vectors:::makeNakedCharacterMatrixForDisplay(tail(x, ntail)))
+      rownames(m) <- S4Vectors:::make_rownames_for_DataTable_display(
+        x_rownames, x_nrow,
+        nhead, ntail)
     }
-    else {
-      out <- rbind(as.matrix(format(as.data.frame(lapply(object,
-                                                         function(x) S4Vectors::showAsCell(head(x, nhead))), optional = TRUE))),
-                   rbind(rep.int("...", nc)), as.matrix(format(as.data.frame(lapply(object,
-                                                                                    function(x) S4Vectors::showAsCell(tail(x, ntail))), optional = TRUE))))
-      rownames(out) <- S4Vectors:::.rownames(nms, nr, nhead, ntail)
-    }
-    classinfo <- matrix(unlist(lapply(object, function(x) {
-      paste0("<", S4Vectors::classNameForDisplay(x)[1], ">")
-    }), use.names = FALSE), nrow = 1, dimnames = list("",
-                                                      colnames(out)))
-    out <- rbind(classinfo, out)
-    print(out, quote = FALSE, right = TRUE)
+    m <- rbind(S4Vectors:::make_class_info_for_DataTable_display(x), m)
+    print(m, quote=FALSE, right=TRUE)
   }
+  invisible(NULL)
 }
 
 setMethod("show", "DataFrame", .show_DF)
