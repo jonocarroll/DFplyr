@@ -6,12 +6,18 @@
 \alias{DFplyr-package}
 \title{DFplyr: A `DataFrame` (`S4Vectors`) backend for `dplyr`}
 \description{
-Provides a backend to `dplyr` supporting `S4Vectors::DataFrame`
+Provides a backend to `dplyr` supporting `S4Vectors::DataFrame`.
 }
 \seealso{
-[add_dplyr_compat()]
+Useful links:
+\itemize{
+  \item \url{https://github.com/jonocarroll/DFplyr}
+  \item Report bugs at \url{https://github.com/jonocarroll/DFplyr/issues}
 }
-\author{
-\strong{Maintainer}: Jonathan Carroll \email{rpkg@jcarroll.com.au} (0000-0002-1404-5264)
 
 }
+\author{
+\strong{Maintainer}: Jonathan Carroll \email{rpkg@jcarroll.com.au} (\href{https://orcid.org/0000-0002-1404-5264}{ORCID})
+
+}
+\keyword{internal}

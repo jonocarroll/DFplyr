@@ -44,112 +44,182 @@ format.DataFrame <- function(x, ...) {
   x
 }
 
-S4_cols <- function(x) {
-  vapply(x, isS4, logical(1))
-}
-
-has_S4 <- function(x) {
-  any(S4_cols(x))
-}
-
-restore_S4 <- function(old, new, id) {
-  ## restore S4 columns
-  s4 <- names(which(S4_cols(old)))
-  groups <- group_data(new)
-
-  for (s4i in s4) {
-    broken_cols <- if (rlang::has_name(new, s4i)) {
-      s4i
-    } else {
-      names(new)[startsWith(names(new), paste0(s4i, "."))]
-    }
-    new[[broken_cols[1]]] <- old[[s4i]][id]
-    names(new) <- replace(names(new), which(names(new) == broken_cols[[1]]), s4i)
-    if (length(broken_cols) > 1L) {
-      for (bc in broken_cols[2:length(broken_cols)]) {
-        new[[bc]] <- NULL
-      }
-    }
-  }
-
-  attr(new@listData, "groups") <- groups
-
-  return(new)
-}
-
+#' @importFrom dplyr filter
 #' @export
 dplyr::filter
+
+#' @importFrom rlang quos eval_tidy
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
-
-  t <- convert_with_group(.data)
-  t$rowid <- seq_len(nrow(t))
-  tf <- dplyr::filter(t, ..., .preserve = .preserve)
-  tDF <- restore_DF(tf, rownames(.data)[tf$rowid])
-
-  if (has_S4(.data)) {
-    tDF <- restore_S4(.data, tDF, tf$rowid)
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+  groupvars <- group_vars(.data)
+  if (length(groupvars) > 0L) {
+    groups <- group_data(.data)
+    split_data <- lapply(seq_len(nrow(groups)), function(x) {
+      .data_grp <- .data[groups$.rows[x][[1]], ,drop = FALSE]
+      for (f in seq_along(FNS)) {
+        .data_grp <- with(.data_grp, base::subset(.data_grp, rlang::eval_tidy(FNS[[f]])))
+      }
+      .data_grp
+    })
+    do.call(rbind, split_data)
+  } else {
+    for (f in seq_along(FNS)) {
+      .data <- with(.data, base::subset(.data, rlang::eval_tidy(FNS[[f]])))
+    }
+    .data
   }
-  tDF$rowid <- NULL
-
-  tDF
 }
 
+top_n_rank <- function (n, wt) {
+  if (n > 0) {
+    min_rank(desc(wt)) <= n
+  }
+  else {
+    min_rank(wt) <= abs(n)
+  }
+}
 
+#' @importFrom dplyr mutate
 #' @export
 dplyr::mutate
+
+#' @importFrom rlang quos quo_squash
 #' @export
 mutate.DataFrame <- function(.data, ...) {
-  t <- convert_with_group(.data)
-  tm <- dplyr::mutate(t, ...)
-  tDF <- restore_DF(tm, rownames(.data))
 
-  if (has_S4(.data)) {
-    tDF <- restore_S4(.data, tDF, seq_len(nrow(tm)))
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+
+  groupvars <- group_vars(.data)
+  if (length(groupvars) > 0L) {
+    groups <- group_data(.data)
+    split_data <- lapply(seq_len(nrow(groups)), function(x) {
+      .data_grp <- .data[groups$.rows[x][[1]], ,drop = FALSE]
+      mutate_internal(.data_grp, FNS, rlang::quos(...))
+    })
+    do.call(rbind, split_data)
+  } else {
+    mutate_internal(.data, FNS, rlang::quos(...))
   }
 
-  tDF
+}
+
+#' @importFrom rlang eval_tidy quo_get_env
+mutate_internal <- function(.data, FUNS, quos) {
+  op <- options("useFancyQuotes")
+  on.exit(options(op))
+  options(useFancyQuotes = FALSE)
+
+  ## hack: inject the local env with the scoped data,
+  ## excluding data that was already here.
+  scope_env <- rlang::quo_get_env(quos[[1]])
+  for (n in setdiff(ls(scope_env, all.names = TRUE), c("...", ls(all.names = TRUE)))) {
+    assign(n, get(n, scope_env), pos = as.environment(-1L))
+  }
+  EXPRS <- lapply(names(FUNS), function(x) {
+    FUNS_expl <- with(.data, rlang::eval_tidy(FUNS[[x]]))
+    FUNS_obj <- with(.data, eval(rlang::eval_tidy(FUNS[[x]])))
+    if (!inherits(FUNS_obj, "numeric")) {
+      sprintf('%s <- %s', x, paste0(deparse(FUNS_expl), collapse = ""))
+      # sprintf('%s <- c(%s)', x, paste0(sQuote(FUNS_expl), collapse = ", "))
+    } else {
+      sprintf('%s <- c(%s)', x, paste0(FUNS_expl, collapse = ", "))
+    }
+  })
+  S4Vectors::within(.data, eval(parse(text = paste0(unlist(EXPRS), collapse = '\n'))))
 }
 
 
+#' @importFrom dplyr tbl_vars
 #' @export
 dplyr::tbl_vars
+
 #' @export
 tbl_vars.DataFrame <- function(x) {
   names(x)
 }
 
-
+#' @importFrom dplyr select
 #' @export
 dplyr::select
+
+#' @importFrom rlang quos quo_squash exprs
 #' @export
 select.DataFrame <- function(.data, ...) {
-  t <- convert_with_group(.data)
-  ts <- dplyr::select(t, ...)
-  ## S4 columns don't need to be restored as they can't be
-  ## selected
-  restore_DF(ts, rownames(.data))
+  dotnames <- names(rlang::exprs(...))
+  .data <- base::subset(.data,
+                  select = unlist(lapply(
+                    rlang::quos(...),
+                    function(x){rlang::eval_tidy(rlang::quo_squash(x))})
+                  ))
+  if (any(dotnames != "")) {
+    non_empty <- which(dotnames != "")
+    for (ne in non_empty) {
+      colnames(.data)[ne] <- dotnames[ne]
+    }
+  }
+  .data
 }
 
-
+#' @importFrom dplyr rename
 #' @export
 dplyr::rename
+
+#' @importFrom rlang quos quo_squash
 #' @export
-rename.DataFrame <- function(.data, ...) {
-  t <- convert_with_group(.data)
-  tr <- dplyr::rename(t, ...)
-  tDF <- restore_DF(tr, rownames(.data))
-
-  if (has_S4(.data)) {
-    tDF <- restore_S4(.data, tDF, seq_len(nrow(tr)))
-  }
-
-  tDF
+rename.DataFrame <- function(x, ...) {
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+  ## S4Vectors::rename not imported as it would mask the existing generic
+  S4Vectors::rename(x, setNames(names(FNS), unlist(FNS)))
+  # browser()
+  # EXPRS <- lapply(names(FNS), function(x){
+  #   c(x, deparse(FNS[[x]]))
+  # })
+  # NAMES <- do.call(rbind, EXPRS)
+  # for(i in 1:nrow(NAMES)){
+  #   names(.data)[match(NAMES[i,2], names(.data))] <- NAMES[i, 1]
+  # }
+  #
+  # .data
 }
 
+#' @importFrom dplyr count
+#' @export
+dplyr::count
 
+#' @importFrom rlang quos quo_squash
+#' @export
+count <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_drop_default(x)) {
+
+  if (!inherits(x, "DataFrame")) {
+    return(dplyr::count(x, ..., wt = !!enquo(wt), sort = sort, name = name, .drop = .drop))
+  }
+
+  groupvars <- group_vars(x)
+  EXPRS <- lapply(rlang::quos(...), function(x) rlang::quo_squash(x))
+  if (length(groupvars) > 0L) {
+    groups <- group_data(x)
+    split_data <- lapply(seq_len(nrow(groups)), function(xx) {
+      .data_grp <- x[groups$.rows[xx][[1]], ,drop = FALSE]
+      tbl_grp <- with(.data_grp, do.call(table, EXPRS))
+      cbind(groups[xx, -ncol(groups)], as(tbl_grp, "DataFrame"))
+    })
+    RET <- do.call(rbind, split_data)
+  } else {
+    RET <- as(with(x, do.call(table, EXPRS)), "DataFrame")
+  }
+
+  names(RET)[ncol(RET)] <- name
+  RET <- RET[RET[[name]] != 0, ]
+  RET <- RET[with(RET, do.call(order, EXPRS)), ]
+
+  RET
+}
+
+#' @importFrom dplyr group_by_drop_default
 #' @export
 dplyr::group_by_drop_default
+
 #' @export
 group_by_drop_default.DataFrame <- function(.tbl) {
   if (!is.null(group_data(.tbl)) && nrow(group_data(.tbl)) > 1L) {
@@ -163,20 +233,39 @@ group_by_drop_default.DataFrame <- function(.tbl) {
   }
 }
 
-
+#' @importFrom dplyr summarise summarize
 #' @export
 dplyr::summarise
-dplyr::summarize
+dplyr::summarise
+
+#' @importFrom rlang quos quo_squash eval_tidy
 #' @export
 summarise.DataFrame <- function(.data, ...) {
-  t <- convert_with_group(.data)
-  dplyr::summarise(t, ...)
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+  groupvars <- group_vars(.data)
+
+  if (length(groupvars) > 0L) {
+    groups <- group_data(.data)
+    split_data <- lapply(seq_len(nrow(groups)), function(xx) {
+      .data_grp <- .data[groups$.rows[xx][[1]], ,drop = FALSE]
+      tbl_grp <- lapply(FNS, function(xx) {with(.data_grp, rlang::eval_tidy(xx))})
+      cbind(groups[xx, -ncol(groups)], as(tbl_grp, "DataFrame"))
+    })
+    RET <- do.call(rbind, split_data)
+  } else {
+    RET <- as(lapply(FNS, function(xx) {with(.data, eval(xx))}), "DataFrame")
+  }
+  RET
 }
 
+#' @export
+summarize.DataFrame <- summarise.DataFrame
 
-
+#' @importFrom dplyr group_data
 #' @export
 dplyr::group_data
+
+#' @importFrom tibble tibble
 #' @export
 group_data.DataFrame <- function(.data) {
   group_attr <- attr(.data@listData, "groups")
@@ -184,13 +273,15 @@ group_data.DataFrame <- function(.data) {
     group_attr
   } else {
     rows <- list(seq_len(nrow(.data)))
-    tibble(`:=`(".rows", rows))
+    tibble::tibble(`:=`(".rows", rows))
   }
 }
 
-
+#' @importFrom dplyr group_vars
 #' @export
 dplyr::group_vars
+
+#' @importFrom rlang as_string
 #' @export
 group_vars.DataFrame <- function(x) {
   groups <- group_data(x)
@@ -200,113 +291,113 @@ group_vars.DataFrame <- function(x) {
   else if (is.data.frame(groups)) {
     head(names(groups), -1L)
   }
-  else if (is.list(groups)) {
-    purrr::map_chr(groups, rlang:::as_string)
-  }
 }
 
-
+#' @importFrom dplyr group_by
 #' @export
 dplyr::group_by
+
+#' @importFrom rlang quos quo_squash as_string syms
+#' @importFrom tibble as.tibble
 #' @export
 group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
-  t <- convert_with_group(.data)
-  tm <- dplyr::group_by(t, ..., add = add, .drop = .drop)
-  tDF <- restore_DF(tm, rownames(.data))
 
-  if (has_S4(.data)) {
-    tDF <- restore_S4(.data, tDF, seq_len(nrow(tm)))
+  if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
+    groupvars <- lapply(rlang::quos(...), function(x) rlang::as_string(rlang::quo_squash(x)))
+    uniques <- unique(select(.data, !!!syms(unlist(groupvars))))
+    flagged <- merge(mutate(.data, rowid = seq_len(nrow(.data))),
+                     mutate(uniques, flag = seq_len(nrow(uniques))),
+                     by = unlist(groupvars), sort = FALSE)
+    groups <- split(as.integer(flagged$rowid), flagged$flag)
+    uniques <- tibble::as.tibble(as.data.frame(uniques))
+    uniques$.rows <- unname(groups)
+    groupdata <- uniques[with(uniques, do.call(order, rlang::syms(groupvars))), ]
+    attr(.data@listData, "groups") <- groupdata
   }
-
-  tDF
+  .data
 }
 
-
+#' @importFrom dplyr ungroup
 #' @export
 dplyr::ungroup
+
 #' @export
 ungroup.DataFrame <- function(x, ...) {
   attr(x@listData, "groups") <- NULL
   x
 }
 
+#' @importFrom dplyr arrange
+#' @export
+dplyr::arrange
 
 #' @export
 dplyr::arrange
 #' @export
 arrange.DataFrame <- function(.data, ...) {
-  ## temporarily blind S4 columns
-  .data_orig <- .data
-  s4 <- names(which(S4_cols(.data)))
-  for (s4i in s4) {
-    .data[[s4i]] <- asS4(seq_len(nrow(.data)))
+
+  EXPRS <- lapply(rlang::quos(...), function(x) rlang::quo_squash(x))
+
+  groupvars <- group_vars(.data)
+  if (length(groupvars) > 0L) {
+    groups <- group_data(.data)
+    split_data <- lapply(seq_len(nrow(groups)), function(x) {
+      .data_grp <- .data[groups$.rows[x][[1]], ,drop = FALSE]
+      .data_grp[with(.data_grp, do.call(order, EXPRS)), ]
+    })
+    do.call(rbind, split_data)
+  } else {
+    .data[with(.data, do.call(order, EXPRS)), ]
   }
-
-  t <- convert_with_group(.data)
-  t$rowid <- seq_len(nrow(t))
-  ta <- dplyr::arrange(t, ...)
-  tDF <- restore_DF(ta, rownames(.data)[ta$rowid])
-
-  if (has_S4(.data)) {
-    tDF <- restore_S4(.data_orig, tDF, ta$rowid)
-  }
-
-  tDF$rowid <- NULL
-  tDF
-
 }
 
+#' @export
+desc <- function(x) {
+  -xtfrm(x)
+}
+
+#' @importFrom dplyr distinct
+#' @export
+dplyr::distinct
 
 #' @export
 dplyr::distinct
 #' @export
 distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
-  ## cannot distinct on S4 columns
-  s4 <- names(which(S4_cols(.data)))
-
-  if (length(s4) > 0L) {
-    warning("S4 columns not supported in distinct: ",
-            toString(s4),
-            ".\n These will be dropped prior to comparison.",
-            call. = FALSE)
-    for (s4i in s4) {
-      .data[[s4i]] <- NULL
-    }
-  }
-
-  t <- convert_with_group(.data)
-  td <- dplyr::distinct(t, ..., .keep_all = .keep_all)
-  restore_DF(td, NULL) # no rownames since they can't be determined
+  .data[!BiocGenerics::duplicated(.data), ]
 }
 
+#' @importFrom dplyr pull
+#' @export
+dplyr::pull
 
 #' @export
 dplyr::pull
 #' @export
-pull.DataFrame <- function(.data, var = -1) {
+pull.DataFrame <- function(.data, var = -1, name = NULL) {
   var <- tidyselect::vars_pull(names(.data), !!enquo(var))
-  .data[[var]]
+  name <- rlang::enquo(name)
+  if (rlang::quo_is_null(name)) {
+    return(.data[[var]])
+  }
+  name <- tidyselect::vars_pull(names(.data), !!name)
+  rlang::set_names(.data[[var]], nm = .data[[name]])
 }
 
+#' @importFrom dplyr slice
+#' @export
+dplyr::slice
 
 #' @export
 dplyr::slice
 #' @export
 slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
-  t <- convert_with_group(.data)
-  ts <- dplyr::slice(t, ..., .preserve = .preserve)
-  tDF <- restore_DF(ts, rownames(.data)[...])
-
-  if (has_S4(.data)) {
-    tDF <- restore_S4(.data, tDF, seq_len(nrow(t))[...])
-  }
-
-  tDF
+  .data[..., ]
 }
 
-
+#' @keywords internal
 convert_with_group <- function(.data) {
-  t <- dplyr::tbl_df(.data)
+  t <- tibble::as_tibble(.data)
   if (!is.null(group_data(.data)) && nrow(group_data(.data)) > 1L) {
     for (gvar in group_vars(.data)) {
       t <- dplyr::group_by(t, !!sym(gvar), add = TRUE)
@@ -315,6 +406,7 @@ convert_with_group <- function(.data) {
   t
 }
 
+#' @keywords internal
 restore_DF <- function(.data, rn) {
   DF <- as(.data, "DataFrame")
   rownames(DF) <- rn

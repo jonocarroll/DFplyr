@@ -1,5 +1,9 @@
-#' @seealso [add_dplyr_compat()]
-#' @import dplyr
-#' @import rlang
-#' @importFrom ggplot2 fortify
+#' @keywords internal
+#' @import S4Vectors
 "_PACKAGE"
+
+# The following block is used by usethis to automatically manage
+# roxygen namespace tags. Modify with care!
+## usethis namespace: start
+## usethis namespace: end
+NULL
