@@ -76,7 +76,10 @@ mutate(d,
        end_X = BiocGenerics::end(grX))
 ```
 
-the object returned remains a standard `DataFrame`, and further calls can be 
+Unlike `dplyr`, expressions cannot be chained together in the same `mutate` call, 
+but multiple calls can be used if this is needed.
+
+The object returned remains a standard `DataFrame`, and further calls can be 
 piped with `%>%`
 
 
@@ -102,15 +105,14 @@ mutate_at(d, vars(starts_with("c")), ~.^2)
 select_at(d, vars(starts_with("gr")))
 ```
 
-Importantly, grouped operations are supported. `DataFrame` does not 
-natively support groups (the same way that `data.frame` does not) so these
-are implemented specifically for `DFplyr`
+Importantly, grouped operations are supported. `DataFrame` (via jonocarroll/S4Vectors) 
+natively support storage of columns by which grouping operations should be performed. 
 
 ```{r}
 group_by(d, cyl, am)
 
-# group_by(d, cyl) %>% 
-#   top_n(1, disp)
+group_by(d, cyl) %>%
+  top_n(1, disp)
 ```
 
 Other verbs are similiarly implemented, and preserve row names where possible
@@ -151,10 +153,3 @@ count(d, gear, am, cyl)
 library(ggplot2)
 ggplot(d, aes(disp, cyl)) + geom_point()
 ```
-
-## Implementation
-
-Most of the `dplyr` verbs for `DataFrame`s are implmented by first converting to `tibble`, 
-performing the verb operation, then converting back to `DataFrame`. Care has been taken to 
-retain groups and row names through these operations, but this may introduce some 
-complications. If you spot any, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).

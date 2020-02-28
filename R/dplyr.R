@@ -61,15 +61,16 @@ Refer ?DFplyr")
   }
   groupvars <- groupInfo(.data)
   if (length(groupvars) > 0L) {
-    split_data <- split(.data, .data[groupvars])
+    fact <- as.list(d[groupvars])
+    split_data <- S4Vectors::split(.data, fact, drop = TRUE)
     for (f in seq_along(FNS)) {
       split_data <- lapply(split_data, function(xx) {
-        if (nrow(xx) == 0L)
-          return(xx[NULL,])
         with(xx, subset(xx, rlang::eval_tidy(FNS[[f]])))
       })
     }
-    .data <- do.call(rbind, split_data)
+    split_data <- S4Vectors::List(split_data)
+    names(split_data) <- NULL
+    .data <- DataFrame(split_data)
   } else {
     for (f in seq_along(FNS)) {
       .data <- with(.data, S4Vectors::subset(.data, rlang::eval_tidy(FNS[[f]])))
@@ -103,13 +104,14 @@ mutate.DataFrame <- function(.data, ..., ungroup = FALSE) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
   groupvars <- S4Vectors::groupInfo(.data)
   if (length(groupvars) > 0L) {
-    split_data <- split(.data, .data[groupvars])
+    fact <- as.list(d[groupvars])
+    split_data <- S4Vectors::split(.data, fact, drop = TRUE)
     split_data <- lapply(split_data, function(xx) {
-      if (nrow(xx) == 0L)
-        return(xx[NULL,])
       mutate_internal(xx, FNS, rlang::quos(...))
     })
-    .data <- do.call(rbind, split_data)
+    split_data <- S4Vectors::List(split_data)
+    names(split_data) <- NULL
+    .data <- BiocGenerics::unlist(split_data)
   } else {
     .data <-  mutate_internal(.data, FNS, rlang::quos(...))
   }
@@ -181,16 +183,6 @@ rename.DataFrame <- function(x, ...) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
   ## S4Vectors::rename not imported as it would mask the existing generic
   S4Vectors::rename(x, setNames(names(FNS), unlist(FNS)))
-  # browser()
-  # EXPRS <- lapply(names(FNS), function(x){
-  #   c(x, deparse(FNS[[x]]))
-  # })
-  # NAMES <- do.call(rbind, EXPRS)
-  # for(i in 1:nrow(NAMES)){
-  #   names(.data)[match(NAMES[i,2], names(.data))] <- NAMES[i, 1]
-  # }
-  #
-  # .data
 }
 
 #' @importFrom dplyr count
@@ -201,29 +193,36 @@ dplyr::count
 #' @export
 count <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_drop_default(x)) {
 
+  ## count is not a generic, so preserve dplyr functionality
   if (!inherits(x, "DataFrame")) {
     return(dplyr::count(x, ..., wt = !!enquo(wt), sort = sort, name = name, .drop = .drop))
   }
 
-  groupvars <- group_vars(x)
   EXPRS <- lapply(rlang::quos(...), function(x) rlang::quo_squash(x))
+  groupvars <- S4Vectors::groupInfo(x)
+  groups <- group_combos(x)
   if (length(groupvars) > 0L) {
-    groups <- group_data(x)
-    split_data <- lapply(seq_len(nrow(groups)), function(xx) {
-      .data_grp <- x[groups$.rows[xx][[1]], ,drop = FALSE]
-      tbl_grp <- with(.data_grp, do.call(table, EXPRS))
-      cbind(groups[xx, -ncol(groups)], as(tbl_grp, "DataFrame"))
+    split_data <- S4Vectors::split(x, x[groupvars])
+    split_data <- lapply(split_data, function(xx) {
+      if (nrow(xx) == 0L)
+        return(NULL)
+      tbl_grp <- S4Vectors::with(xx, do.call(table, EXPRS))
+      unique_grp <- unique(xx[, groupvars])
+      rownames(unique_grp) <- NULL
+      cbind(unique_grp, as(tbl_grp, "data.frame"))
     })
-    RET <- do.call(rbind, split_data)
+    .data <- do.call(rbind, split_data)
   } else {
-    RET <- as(with(x, do.call(table, EXPRS)), "DataFrame")
+    tbl_grp <- with(x, do.call(table, EXPRS))
+    .data <- as(tbl_grp, "DataFrame")
+    .data <- as.data.frame(.data)
   }
-
-  names(RET)[ncol(RET)] <- name
-  RET <- RET[RET[[name]] != 0, ]
-  RET <- RET[with(RET, do.call(order, EXPRS)), ]
-
-  RET
+  .data <- ungroup(.data)
+  names(.data)[ncol(.data)] <- name
+  .data <- .data[.data$n != 0, ]
+  .data <- .data[with(.data, do.call(order, rlang::syms(EXPRS))), ]
+  rownames(.data) <- seq_len(nrow(.data))
+  .data
 }
 
 #' @importFrom dplyr group_by_drop_default
@@ -252,16 +251,28 @@ dplyr::summarize
 #' @export
 summarise.DataFrame <- function(.data, ...) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  groupvars <- group_vars(.data)
+  groupvars <- groupInfo(.data)
 
   if (length(groupvars) > 0L) {
-    groups <- group_data(.data)
-    split_data <- lapply(seq_len(nrow(groups)), function(xx) {
-      .data_grp <- .data[groups$.rows[xx][[1]], ,drop = FALSE]
-      tbl_grp <- lapply(FNS, function(xx) {with(.data_grp, rlang::eval_tidy(xx))})
-      cbind(groups[xx, -ncol(groups)], as(tbl_grp, "DataFrame"))
-    })
-    RET <- do.call(rbind, split_data)
+    fact <- as.list(d[groupvars])
+    groups <- group_combos(.data)
+    split_data <- S4Vectors::split(.data, fact, drop = TRUE)
+      split_data <- lapply(seq_len(length(split_data)), function(xx) {
+        tbl_grp <- lapply(FNS, function(f) with(split_data[[xx]], rlang::eval_tidy(f)))
+        cbind(groups[xx,], as(tbl_grp, "DataFrame"))
+      })
+    split_data <- S4Vectors::List(split_data)
+    names(split_data) <- NULL
+    RET <- BiocGenerics::unlist(split_data)
+
+
+
+    # split_data <- lapply(seq_len(nrow(groups)), function(xx) {
+    #   .data_grp <- .data[groups$.rows[xx][[1]], ,drop = FALSE]
+    #   tbl_grp <- lapply(FNS, function(xx) {with(.data_grp, rlang::eval_tidy(xx))})
+    #   cbind(groups, as(tbl_grp, "DataFrame"))
+    # })
+    # RET <- do.call(rbind, split_data)
   } else {
     RET <- as(lapply(FNS, function(xx) {with(.data, eval(xx))}), "DataFrame")
   }
@@ -303,6 +314,17 @@ group_vars.DataFrame <- function(x) {
   }
 }
 
+group_combos <- function(.data, groupvars = NULL) {
+  if (is.null(groupvars))
+    groupvars <- S4Vectors::groupInfo(.data)
+  if (is.null(groupvars))
+    return(NULL)
+  uniques <- unique(select(.data, !!!syms(unlist(groupvars))))
+  uniques <- as.data.frame(uniques)
+  rownames(uniques) <- NULL
+  uniques[with(uniques, do.call(order, rlang::syms(groupvars))), ]
+}
+
 #' @importFrom dplyr group_by
 #' @export
 dplyr::group_by
@@ -312,17 +334,18 @@ dplyr::group_by
 #' @export
 group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
 
-  if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
-    groupvars <- lapply(rlang::quos(...), function(x) rlang::as_string(rlang::quo_squash(x)))
-    uniques <- unique(select(.data, !!!syms(unlist(groupvars))))
-    flagged <- merge(mutate(.data, rowid = seq_len(nrow(.data))),
-                     mutate(uniques, flag = seq_len(nrow(uniques))),
-                     by = unlist(groupvars), sort = FALSE)
-    groups <- split(as.integer(flagged$rowid), flagged$flag)
-    uniques <- tibble::as.tibble(as.data.frame(uniques))
-    uniques$.rows <- unname(groups)
-    groupdata <- uniques[with(uniques, do.call(order, rlang::syms(groupvars))), ]
-    attr(.data@listData, "groups") <- groupdata
+  groupvars <- vapply(rlang::quos(...),
+                      function(x) rlang::as_string(rlang::quo_squash(x)),
+                      character(1))
+  groupvars <- intersect(groupvars, names(.data))
+  if (is.null(groupInfo(.data)) && !add) {
+    if (!length(groupvars)) {
+      return(.data)
+    } else {
+      groupInfo(.data) <- unname(groupvars)
+    }
+  } else if (!is.null(groupInfo) && length(groupvars) && add) {
+    groupInfo(.data) <- c(groupInfo(.data), groupvars)
   }
   .data
 }
