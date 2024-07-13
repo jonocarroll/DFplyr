@@ -49,7 +49,7 @@ format.DataFrame <- function(x, ...) {
 dplyr::filter
 
 #' @importFrom rlang quos eval_tidy quo_squash
-#' @importFrom S4Vectors groupInfo subset
+#' @importFrom S4Vectors groupCols subset
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE, quiet = FALSE, ungroup = FALSE) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
@@ -59,7 +59,7 @@ Refer ?DFplyr")
   if (any(names(FNS) %in% names(.data))) {
     message("Arguments should not be named. Do you mean to use `==`?")
   }
-  groupvars <- groupInfo(.data)
+  groupvars <- groupCols(.data)
   if (length(groupvars) > 0L) {
     fact <- as.list(d[groupvars])
     split_data <- S4Vectors::split(.data, fact, drop = TRUE)
@@ -79,6 +79,8 @@ Refer ?DFplyr")
   }
   if (ungroup) {
     .data <- ungroup(.data)
+  } else {
+    S4Vectors::groupCols(.data) <- groupvars
   }
   .data
 }
@@ -97,12 +99,12 @@ top_n_rank <- function (n, wt) {
 dplyr::mutate
 
 #' @importFrom rlang quos quo_squash
-#' @importFrom S4Vectors groupInfo subset
+#' @importFrom S4Vectors groupCols subset
 #' @export
 mutate.DataFrame <- function(.data, ..., ungroup = FALSE) {
 
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  groupvars <- S4Vectors::groupInfo(.data)
+  groupvars <- S4Vectors::groupCols(.data)
   if (length(groupvars) > 0L) {
     fact <- as.list(d[groupvars])
     split_data <- S4Vectors::split(.data, fact, drop = TRUE)
@@ -117,6 +119,8 @@ mutate.DataFrame <- function(.data, ..., ungroup = FALSE) {
   }
   if (ungroup) {
     .data <- ungroup(.data)
+  } else {
+    S4Vectors::groupCols(.data) <- groupvars
   }
   .data
 }
@@ -199,7 +203,7 @@ count <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_
   }
 
   EXPRS <- lapply(rlang::quos(...), function(x) rlang::quo_squash(x))
-  groupvars <- S4Vectors::groupInfo(x)
+  groupvars <- S4Vectors::groupCols(x)
   groups <- group_combos(x)
   if (length(groupvars) > 0L) {
     split_data <- S4Vectors::split(x, x[groupvars])
@@ -251,7 +255,7 @@ dplyr::summarize
 #' @export
 summarise.DataFrame <- function(.data, ...) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  groupvars <- groupInfo(.data)
+  groupvars <- groupCols(.data)
 
   if (length(groupvars) > 0L) {
     fact <- as.list(d[groupvars])
@@ -316,7 +320,7 @@ group_vars.DataFrame <- function(x) {
 
 group_combos <- function(.data, groupvars = NULL) {
   if (is.null(groupvars))
-    groupvars <- S4Vectors::groupInfo(.data)
+    groupvars <- S4Vectors::groupCols(.data)
   if (is.null(groupvars))
     return(NULL)
   uniques <- unique(select(.data, !!!syms(unlist(groupvars))))
@@ -338,14 +342,14 @@ group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_de
                       function(x) rlang::as_string(rlang::quo_squash(x)),
                       character(1))
   groupvars <- intersect(groupvars, names(.data))
-  if (is.null(groupInfo(.data)) && !add) {
+  if (is.null(groupCols(.data)) && !add) {
     if (!length(groupvars)) {
       return(.data)
     } else {
-      groupInfo(.data) <- unname(groupvars)
+      groupCols(.data) <- unname(groupvars)
     }
-  } else if (!is.null(groupInfo) && length(groupvars) && add) {
-    groupInfo(.data) <- c(groupInfo(.data), groupvars)
+  } else if (!is.null(groupCols) && length(groupvars) && add) {
+    groupCols(.data) <- c(groupCols(.data), groupvars)
   }
   .data
 }
@@ -356,7 +360,7 @@ dplyr::ungroup
 
 #' @export
 ungroup.DataFrame <- function(x, ...) {
-  S4Vectors::groupInfo(x) <- NULL
+  S4Vectors::groupCols(x) <- NULL
   x
 }
 
