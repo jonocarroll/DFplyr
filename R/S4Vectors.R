@@ -1,32 +1,32 @@
 
-.show_DF <- function(x) {
+.show_DF <- function(object) {
   nhead <- S4Vectors::get_showHeadLines()
   ntail <- S4Vectors::get_showTailLines()
-  x_nrow <- nrow(x)
-  x_ncol <- ncol(x)
-  cat(S4Vectors::classNameForDisplay(x), " with ",
+  x_nrow <- nrow(object)
+  x_ncol <- ncol(object)
+  cat(S4Vectors::classNameForDisplay(object), " with ",
       x_nrow, " row", ifelse(x_nrow == 1L, "", "s"),
       " and ",
       x_ncol, " column", ifelse(x_ncol == 1L, "", "s"),
       "\n", sep="")
-  if (!is.null(group_data(x)) & nrow(group_data(x)) > 1L) {
-    cat("Groups: ", toString(group_vars(x)), "\n")
+  if (!is.null(group_data(object)) & nrow(group_data(object)) > 1L) {
+    cat("Groups: ", toString(group_vars(object)), "\n")
   }
   if (x_nrow != 0L && x_ncol != 0L) {
-    x_rownames <- rownames(x)
+    x_rownames <- rownames(object)
     if (x_nrow <= nhead + ntail + 1L) {
-      m <- S4Vectors:::makeNakedCharacterMatrixForDisplay(x)
+      m <- S4Vectors:::makeNakedCharacterMatrixForDisplay(object)
       if (!is.null(x_rownames))
         rownames(m) <- x_rownames
     } else {
-      m <- rbind(S4Vectors:::makeNakedCharacterMatrixForDisplay(head(x, nhead)),
+      m <- rbind(S4Vectors:::makeNakedCharacterMatrixForDisplay(head(object, nhead)),
                  rbind(rep.int("...", x_ncol)),
-                 S4Vectors:::makeNakedCharacterMatrixForDisplay(tail(x, ntail)))
-      rownames(m) <- S4Vectors:::make_rownames_for_DataTable_display(
+                 S4Vectors:::makeNakedCharacterMatrixForDisplay(tail(object, ntail)))
+      rownames(m) <- S4Vectors:::make_rownames_for_RectangularData_display(
         x_rownames, x_nrow,
         nhead, ntail)
     }
-    m <- rbind(S4Vectors:::make_class_info_for_DataTable_display(x), m)
+    m <- rbind(S4Vectors:::make_class_info_for_DataFrame_display(object), m)
     print(m, quote=FALSE, right=TRUE)
   }
   invisible(NULL)
