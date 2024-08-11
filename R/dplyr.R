@@ -298,7 +298,7 @@ group_vars.DataFrame <- function(x) {
 dplyr::group_by
 
 #' @importFrom rlang quos quo_squash as_string syms
-#' @importFrom tibble as.tibble
+#' @importFrom tibble as_tibble
 #' @export
 group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
 
@@ -309,7 +309,7 @@ group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_de
                      mutate(uniques, flag = seq_len(nrow(uniques))),
                      by = unlist(groupvars), sort = FALSE)
     groups <- split(as.integer(flagged$rowid), flagged$flag)
-    uniques <- tibble::as.tibble(as.data.frame(uniques))
+    uniques <- tibble::as_tibble(as.data.frame(uniques))
     uniques$.rows <- unname(groups)
     groupdata <- uniques[with(uniques, do.call(order, rlang::syms(groupvars))), ]
     attr(.data@listData, "groups") <- groupdata
@@ -333,6 +333,7 @@ dplyr::arrange
 
 #' @export
 dplyr::arrange
+
 #' @export
 arrange.DataFrame <- function(.data, ...) {
 
@@ -362,6 +363,7 @@ dplyr::distinct
 
 #' @export
 dplyr::distinct
+
 #' @export
 distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
   .data[!BiocGenerics::duplicated(.data), ]
@@ -373,6 +375,7 @@ dplyr::pull
 
 #' @export
 dplyr::pull
+
 #' @export
 pull.DataFrame <- function(.data, var = -1, name = NULL) {
   var <- tidyselect::vars_pull(names(.data), !!enquo(var))
@@ -390,6 +393,7 @@ dplyr::slice
 
 #' @export
 dplyr::slice
+
 #' @export
 slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
   .data[..., ]
