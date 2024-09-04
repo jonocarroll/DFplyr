@@ -31,18 +31,7 @@ devtools::install_github("jonocarroll/DFplyr")
 ```
 ## Examples
 
-Most `dplyr` functions are implemented. If you find any which are not, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).
-
-```{r}
-suppressPackageStartupMessages(
-  suppressWarnings({
-    library(S4Vectors)
-    library(dplyr)
-    library(DFplyr)
-  }))
-```
-
-First create an S4Vectors DataFrame, including S4 columns if desired
+First create an S4Vectors `DataFrame`, including S4 columns if desired
 
 ```{r}
 library(S4Vectors)
@@ -64,6 +53,8 @@ functions. Adding multiple columns will result in the new columns being created 
 alphabetical order
 
 ```{r}
+library(DFplyr)
+
 mutate(d, newvar = cyl + hp)
 
 mutate(d, nl2 = nl * 2)
@@ -108,27 +99,27 @@ are implemented specifically for `DFplyr`
 
 ```{r}
 group_by(d, cyl, am)
-
-# group_by(d, cyl) %>% 
-#   top_n(1, disp)
 ```
 
-Other verbs are similiarly implemented, and preserve row names where possible
+Other verbs are similarly implemented, and preserve row names where possible
 
 ```{r}
 select(d, am, cyl)
-
-select(d, am, cyl) %>%
-  DFplyr::rename(foo = am)
 
 arrange(d, desc(hp))
 
 filter(d, am == 0) 
 
 slice(d, 3:6)
+```
 
-# dd <- rbind(data.frame(d[1, ], row.names = "MyCar"), d)
-# dd
+`rename` is itself renamed to `rename2` due to conflicts between {dplyr} and 
+{S4Vectors}, but works in the {dplyr} sense of taking `new = old` replacements 
+with NSE syntax
+
+```{r}
+select(d, am, cyl) %>%
+  rename2(foo = am)
 ```
 
 Row names are not preserved when there may be duplicates or they don't make 
@@ -145,16 +136,8 @@ group_by(d, cyl, am) %>%
 count(d, gear, am, cyl)
 ```
 
-`ggplot2` support is also enabled
+## Coverage
 
-```{r}
-library(ggplot2)
-ggplot(d, aes(disp, cyl)) + geom_point()
-```
+Most `dplyr` functions are implemented with the exception of `join`s. 
 
-## Implementation
-
-Most of the `dplyr` verbs for `DataFrame`s are implmented by first converting to `tibble`, 
-performing the verb operation, then converting back to `DataFrame`. Care has been taken to 
-retain groups and row names through these operations, but this may introduce some 
-complications. If you spot any, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).
+If you find any which are not, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).

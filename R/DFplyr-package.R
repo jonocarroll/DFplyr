@@ -1,5 +1,45 @@
-#' @keywords internal
+#' #' Treat a `S4Vectors::DataFrame` as a `dplyr` data source
+#'
+#' Add \pkg{dplyr} compatibility to `S4Vectors::DataFrame`
+#' for use with a selection of \pkg{dplyr} verbs.
+#'
+#' @param x A `S4Vectors::DataFrame` object
+#'
 #' @import S4Vectors
+#' @importFrom dplyr mutate filter select arrange tbl_vars
+#' @importFrom dplyr count group_by_drop_default summarise summarize
+#' @importFrom dplyr group_data group_vars group_by ungroup
+#' @importFrom dplyr distinct pull slice tally
+#'
+#' @md
+#' @examples
+#' library(S4Vectors)
+#' library(dplyr)
+#'
+#' d <- as(mtcars, "DataFrame")
+#'
+#' mutate(d, newvar = cyl + hp)
+#'
+#' mutate_at(d, vars(starts_with("c")), ~.^2)
+#'
+#' group_by(d, cyl, am) %>%
+#'    tally(gear)
+#'
+#' count(d, gear, am, cyl)
+#'
+#' select(d, am, cyl)
+#'
+#' select(d, am, cyl) %>%
+#'    rename2(foo = am)
+#'
+#' arrange(d, desc(hp))
+#'
+#' rbind(DataFrame(mtcars[1, ], row.names = "MyCar"), d) %>%
+#'    distinct()
+#'
+#' filter(d, am == 0)
+#'
+#' slice(d, 3:6)
 "_PACKAGE"
 
 # The following block is used by usethis to automatically manage

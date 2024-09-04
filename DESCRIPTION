@@ -1,6 +1,6 @@
 Package: DFplyr
 Title: A `DataFrame` (`S4Vectors`) backend for `dplyr`
-Version: 0.0.1.9000
+Version: 0.0.2
 Authors@R: person("Jonathan", "Carroll", 
  email = "rpkg@jcarroll.com.au", 
  role = c("aut", "cre"), 
@@ -16,8 +16,9 @@ BugReports: https://github.com/jonocarroll/DFplyr/issues
 Depends: 
     dplyr
 Imports: 
-    ggplot2,
     S4Vectors,
     rlang,
     tibble,
-    tidyselect
+    tidyselect,
+    methods,
+    BiocGenerics

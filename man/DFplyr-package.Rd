@@ -4,9 +4,42 @@
 \name{DFplyr-package}
 \alias{DFplyr}
 \alias{DFplyr-package}
-\title{DFplyr: A `DataFrame` (`S4Vectors`) backend for `dplyr`}
+\title{#' Treat a \code{S4Vectors::DataFrame} as a \code{dplyr} data source}
+\arguments{
+\item{x}{A \code{S4Vectors::DataFrame} object}
+}
 \description{
-Provides a backend to `dplyr` supporting `S4Vectors::DataFrame`.
+Add \pkg{dplyr} compatibility to \code{S4Vectors::DataFrame}
+for use with a selection of \pkg{dplyr} verbs.
+}
+\examples{
+library(S4Vectors)
+library(dplyr)
+
+d <- as(mtcars, "DataFrame")
+
+mutate(d, newvar = cyl + hp)
+
+mutate_at(d, vars(starts_with("c")), ~.^2)
+
+group_by(d, cyl, am) \%>\%
+   tally(gear)
+
+count(d, gear, am, cyl)
+
+select(d, am, cyl)
+
+select(d, am, cyl) \%>\%
+   rename2(foo = am)
+
+arrange(d, desc(hp))
+
+rbind(DataFrame(mtcars[1, ], row.names = "MyCar"), d) \%>\%
+   distinct()
+
+filter(d, am == 0)
+
+slice(d, 3:6)
 }
 \seealso{
 Useful links:
@@ -20,4 +53,3 @@ Useful links:
 \strong{Maintainer}: Jonathan Carroll \email{rpkg@jcarroll.com.au} (\href{https://orcid.org/0000-0002-1404-5264}{ORCID})
 
 }
-\keyword{internal}
