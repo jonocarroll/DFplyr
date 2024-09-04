@@ -1,3 +1,5 @@
+utils::globalVariables(c(".data", ":="))
+
 #' @export
 format.DataFrame <- function(x, ...) {
   x
@@ -98,6 +100,7 @@ select.DataFrame <- function(.data, ...) {
 #' @importFrom S4Vectors rename
 #' @inherit dplyr::rename
 #' @export
+#'
 rename2 <- function(.data, ...) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
   ## S4Vectors::rename not imported as it would mask the existing generic
@@ -117,11 +120,11 @@ count.DataFrame <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop =
   if (length(groupvars) > 0L) {
     groups <- group_data(x)
     if (!length(EXPRS)) {
-      RET <- select(mutate(groups, n = lengths(.rows)), -.data$.rows)
+      RET <- select(mutate(groups, n = lengths(.data$.rows)), -.data$.rows)
       names(RET)[ncol(RET)] <- name
       RET <- RET[RET[[name]] != 0, ]
       return(RET)
-    } 
+    }
     split_data <- lapply(seq_len(nrow(groups)), function(xx) {
       .data_grp <- x[groups$.rows[xx][[1]], ,drop = FALSE]
       tbl_grp <- with(.data_grp, do.call(table, EXPRS))
@@ -289,7 +292,7 @@ restore_DF <- function(.data, rn) {
   DF
 }
 
-#' @export 
+#' @export
 tally.DataFrame <- function (x, wt = NULL, sort = FALSE, name = NULL)  {
     name <- .check_n_name(name, group_vars(x))
     out <- .tally_n(x, {{ wt }}, name)
@@ -306,7 +309,7 @@ tally.DataFrame <- function (x, wt = NULL, sort = FALSE, name = NULL)  {
     if (is.null(name)) {
         name <- .n_name(vars)
         if (name != "n") {
-          rlang::inform(c(paste0("Storing counts in `", name, "`, as `n` already present in input"), 
+          rlang::inform(c(paste0("Storing counts in `", name, "`, as `n` already present in input"),
                           i = "Use `name = \"new_name\"` to pick a new name."))
         }
     }
