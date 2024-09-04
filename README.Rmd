@@ -111,6 +111,9 @@ arrange(d, desc(hp))
 filter(d, am == 0) 
 
 slice(d, 3:6)
+
+group_by(d, gear) %>% 
+  slice(1:2)
 ```
 
 `rename` is itself renamed to `rename2` due to conflicts between {dplyr} and 

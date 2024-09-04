@@ -5,11 +5,11 @@
 #'
 #' @param x A `S4Vectors::DataFrame` object
 #'
-#' @import S4Vectors
 #' @importFrom dplyr mutate filter select arrange tbl_vars
 #' @importFrom dplyr count group_by_drop_default summarise summarize
 #' @importFrom dplyr group_data group_vars group_by ungroup
 #' @importFrom dplyr distinct pull slice tally
+#' @import S4Vectors
 #'
 #' @md
 #' @examples

@@ -271,7 +271,18 @@ pull.DataFrame <- function(.data, var = -1, name = NULL, ...) {
 
 #' @export
 slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
-  .data[..., ]
+  # .data[..., ]
+  groupvars <- group_vars(.data)
+  if (length(groupvars) > 0L) {
+    groups <- group_data(.data)
+    split_data <- lapply(seq_len(nrow(groups)), function(x) {
+      .data_grp <- .data[groups$.rows[x][[1]], ,drop = FALSE]
+      .data_grp[..., ]
+    })
+    do.call(rbind, split_data)
+  } else {
+    .data[..., ]
+  }
 }
 
 #' @keywords internal
