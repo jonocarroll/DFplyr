@@ -20,22 +20,22 @@ d <- as(mtcars, "DataFrame")
 
 mutate(d, newvar = cyl + hp)
 
-mutate_at(d, vars(starts_with("c")), ~.^2)
+mutate_at(d, vars(starts_with("c")), ~ .^2)
 
 group_by(d, cyl, am) \%>\%
-   tally(gear)
+    tally(gear)
 
 count(d, gear, am, cyl)
 
 select(d, am, cyl)
 
 select(d, am, cyl) \%>\%
-   rename2(foo = am)
+    rename2(foo = am)
 
 arrange(d, desc(hp))
 
 rbind(DataFrame(mtcars[1, ], row.names = "MyCar"), d) \%>\%
-   distinct()
+    distinct()
 
 filter(d, am == 0)
 

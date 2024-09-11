@@ -17,9 +17,10 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of DFplyr is to enable `dplyr` and `ggplot2` support for `S4Vectors::DataFrame` by 
-providing the appropriate extension methods. As row names are an important feature of many 
-Bioconductor structures, these are preserved where possible.
+The goal of DFplyr is to enable `dplyr` and `ggplot2` support for
+`S4Vectors::DataFrame` by providing the appropriate extension methods. As row
+names are an important feature of many Bioconductor structures, these are
+preserved where possible.
 
 ## Installation
 
@@ -43,14 +44,19 @@ d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
 d
 ```
 
-This will appear in RStudio's environment pane as a `Formal class DataFrame (dplyr-compatible)` when 
-using `DFplyr`. No interference with the actual object is required, but this helps 
-identify that `dplyr`-compatibility is available.
+This will appear in RStudio's environment pane as a 
 
-`DataFrame`s can then be used in `dplyr` calls the same as `data.frame` or `tibble` 
-objects. Support for working with S4 columns is enabled provided they have appropriate 
-functions. Adding multiple columns will result in the new columns being created in 
-alphabetical order
+```
+Formal class DataFrame (dplyr-compatible)
+``` 
+
+when using `DFplyr`. No interference with the actual object is required, but
+this helps identify that `dplyr`-compatibility is available.
+
+`DataFrame`s can then be used in `dplyr` calls the same as `data.frame` or
+`tibble` objects. Support for working with S4 columns is enabled provided they
+have appropriate functions. Adding multiple columns will result in the new
+columns being created in alphabetical order
 
 ```{r}
 library(DFplyr)
@@ -126,10 +132,10 @@ select(d, am, cyl) %>%
     rename2(foo = am)
 ```
 
-Row names are not preserved when there may be duplicates or they don't make 
-sense, otherwise the first label (according to the current de-duplication method, 
-in the case of `distinct`, this is via `BiocGenerics::duplicated`). This may have 
-complications for S4 columns.
+Row names are not preserved when there may be duplicates or they don't make
+sense, otherwise the first label (according to the current de-duplication
+method, in the case of `distinct`, this is via `BiocGenerics::duplicated`). This
+may have complications for S4 columns.
 
 ```{r}
 distinct(d)

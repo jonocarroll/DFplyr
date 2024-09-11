@@ -17,14 +17,18 @@ filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
         split_data <- lapply(seq_len(nrow(groups)), function(x) {
             .data_grp <- .data[groups$.rows[x][[1]], , drop = FALSE]
             for (f in seq_along(FNS)) {
-                .data_grp <- with(.data_grp, base::subset(.data_grp, rlang::eval_tidy(FNS[[f]])))
+                .data_grp <- with(.data_grp,
+                                  base::subset(.data_grp,
+                                               rlang::eval_tidy(FNS[[f]])))
             }
             .data_grp
         })
         do.call(rbind, split_data)
     } else {
         for (f in seq_along(FNS)) {
-            .data <- with(.data, base::subset(.data, rlang::eval_tidy(FNS[[f]])))
+            .data <- with(.data,
+                          base::subset(.data,
+                                       rlang::eval_tidy(FNS[[f]])))
         }
         .data
     }
@@ -60,8 +64,11 @@ mutate_internal <- function(.data, FUNS, quos) {
     ## excluding data that was already here.
     ## this is important for capturing RHS variables
     scope_env <- rlang::quo_get_env(quos[[1]])
-    for (n in setdiff(ls(scope_env, all.names = TRUE), c("...", ls(all.names = TRUE)))) {
-        assign(n, get(n, scope_env), pos = as.environment(-1L))
+    for (n in setdiff(
+      ls(scope_env, all.names = TRUE),
+      c("...", ls(all.names = TRUE)))
+    ) {
+      assign(n, get(n, scope_env), pos = as.environment(-1L))
     }
     EXPRS <- lapply(names(FUNS), function(x) {
         FUNS_expl <- with(.data, rlang::eval_tidy(FUNS[[x]]))
@@ -72,7 +79,11 @@ mutate_internal <- function(.data, FUNS, quos) {
             sprintf("%s <- c(%s)", x, paste0(FUNS_expl, collapse = ", "))
         }
     })
-    S4Vectors::within(.data, eval(parse(text = paste0(unlist(EXPRS), collapse = "\n"))))
+    S4Vectors::within(.data, eval(
+      parse(
+        text = paste0(unlist(EXPRS), collapse = "\n")
+      )
+    ))
 }
 
 #' @inherit dplyr::tbl_vars
@@ -118,9 +129,21 @@ rename2 <- function(.data, ...) {
 #' @inherit dplyr::count
 #' @importFrom rlang quos quo_squash enquo
 #' @export
-count.DataFrame <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop = group_by_drop_default(x)) {
+count.DataFrame <- function(x,
+                            ...,
+                            wt = NULL,
+                            sort = FALSE,
+                            name = "n",
+                            .drop = group_by_drop_default(x)) {
     if (!inherits(x, "DataFrame")) {
-        return(dplyr::count(x, ..., wt = !!rlang::enquo(wt), sort = sort, name = name, .drop = .drop))
+      return(
+        dplyr::count(x,
+                     ...,
+                     wt = !!rlang::enquo(wt),
+                     sort = sort,
+                     name = name,
+                     .drop = .drop)
+      )
     }
 
     groupvars <- group_vars(x)
@@ -128,7 +151,9 @@ count.DataFrame <- function(x, ..., wt = NULL, sort = FALSE, name = "n", .drop =
     if (length(groupvars) > 0L) {
         groups <- group_data(x)
         if (!length(EXPRS)) {
-            RET <- select(mutate(groups, n = lengths(.data$.rows)), -.data$.rows)
+            RET <- select(mutate(groups,
+                                 n = lengths(.data$.rows)),
+                          -.data$.rows)
             names(RET)[ncol(RET)] <- name
             RET <- RET[RET[[name]] != 0, ]
             return(RET)
@@ -229,18 +254,24 @@ group_vars.DataFrame <- function(x) {
 #' @importFrom rlang quos quo_squash as_string syms
 #' @importFrom tibble as_tibble
 #' @export
-group_by.DataFrame <- function(.data, ..., add = FALSE, .drop = group_by_drop_default(.data)) {
+group_by.DataFrame <- function(.data,
+                               ...,
+                               add = FALSE,
+                               .drop = group_by_drop_default(.data)) {
     if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
-        groupvars <- lapply(rlang::quos(...), function(x) rlang::as_string(rlang::quo_squash(x)))
-        uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
-        flagged <- merge(mutate(.data, rowid = seq_len(nrow(.data))),
-            mutate(uniques, flag = seq_len(nrow(uniques))),
-            by = unlist(groupvars), sort = FALSE
-        )
-        groups <- split(as.integer(flagged$rowid), flagged$flag)
-        uniques <- tibble::as_tibble(as.data.frame(uniques))
-        uniques$.rows <- unname(groups)
-        groupdata <- uniques[with(uniques, do.call(order, rlang::syms(groupvars))), ]
+      groupvars <- lapply(
+        rlang::quos(...),
+        function(x) rlang::as_string(rlang::quo_squash(x))
+      )
+      uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
+      flagged <- merge(mutate(.data, rowid = seq_len(nrow(.data))),
+                       mutate(uniques, flag = seq_len(nrow(uniques))),
+                       by = unlist(groupvars), sort = FALSE
+      )
+      groups <- split(as.integer(flagged$rowid), flagged$flag)
+      uniques <- tibble::as_tibble(as.data.frame(uniques))
+      uniques$.rows <- unname(groups)
+      groupdata <- uniques[with(uniques, do.call(order, rlang::syms(groupvars))), ]
         attr(.data@listData, "groups") <- groupdata
     }
     .data
@@ -347,11 +378,16 @@ tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = NULL) {
 
 #' @importFrom rlang caller_arg caller_env inform
 #' @keywords internal
-.check_n_name <- function(name, vars, arg = rlang::caller_arg(name), call = rlang::caller_env()) {
+.check_n_name <- function(name,
+                          vars,
+                          arg = rlang::caller_arg(name),
+                          call = rlang::caller_env()) {
     if (is.null(name)) {
         name <- .n_name(vars)
         if (name != "n") {
-            rlang::inform(c(paste0("Storing counts in `", name, "`, as `n` already present in input"),
+            rlang::inform(c(paste0("Storing counts in `",
+                                   name, "`,
+                                   as `n` already present in input"),
                 i = "Use `name = \"new_name\"` to pick a new name."
             ))
         }
@@ -373,7 +409,8 @@ tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = NULL) {
 .tally_n <- function(x, wt, name) {
     wt <- rlang::enquo(wt)
     if (rlang::is_call(rlang::quo_get_expr(wt), "n", n = 0)) {
-        rlang::warn(c("`wt = n()` is deprecated", i = "You can now omit the `wt` argument"))
+        rlang::warn(c("`wt = n()` is deprecated",
+                      i = "You can now omit the `wt` argument"))
         wt <- rlang::quo(NULL)
     }
     if (rlang::quo_is_null(wt)) {

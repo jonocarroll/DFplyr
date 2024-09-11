@@ -24,7 +24,7 @@ editor_options:
 knitr::opts_chunk$set(
     collapse = TRUE,
     comment = "#>",
-    crop = NULL ## Related to https://stat.ethz.ch/pipermail/bioc-devel/2020-April/016656.html
+    crop = NULL 
 )
 ```
 
@@ -55,7 +55,9 @@ bib <- c(
 
 ## Install `DFplyr`
 
-`r Biocpkg("DFplyr")` is a `R` package available via the [Bioconductor](http://bioconductor.org) repository for packages and can be downloaded via `BiocManager::install()`:
+`r Biocpkg("DFplyr")` is a `R` package available via the 
+[Bioconductor](http://bioconductor.org) repository for packages and can be
+downloaded via `BiocManager::install()`:
 
 ```{r "install", eval = FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -70,15 +72,16 @@ BiocManager::valid()
 
 ## Background
 
-`r Biocpkg("DFplyr")` is inspired by `r CRANpkg("dplyr")` which implements a wide 
-variety of common data manipulations (`mutate`, `select`, `filter`) but which 
-only operates on objects of class `data.frame` or `tibble` (from `r CRANpkg("tibble")`).
+`r Biocpkg("DFplyr")` is inspired by `r CRANpkg("dplyr")` which implements a
+wide variety of common data manipulations (`mutate`, `select`, `filter`) but
+which only operates on objects of class `data.frame` or `tibble` (from `r
+CRANpkg("tibble")`).
 
-When working with `r Biocpkg("S4Vectors")` `DataFrame`s - which are frequently used 
-as components of, for example `r Biocpkg("SummarizedExperiment")` objects - a common 
-workaround is to convert the `DataFrame` to a `tibble` in order to then use 
-`r CRANpkg("dplyr")` functions to manipulate the contents, before converting back 
-to a `DataFrame`. 
+When working with `r Biocpkg("S4Vectors")` `DataFrame`s - which are frequently
+used as components of, for example `r Biocpkg("SummarizedExperiment")` objects -
+a common workaround is to convert the `DataFrame` to a `tibble` in order to then
+use `r CRANpkg("dplyr")` functions to manipulate the contents, before converting
+back to a `DataFrame`.
 
 This has several drawbacks, including the fact that `tibble` does not support 
 rownames (and `r CRANpkg("dplyr")` frequently does not preserve them), does not 
@@ -155,8 +158,9 @@ mutate(d, newvar = cyl + hp) %>%
     pull(newvar)
 ```
 
-Some of the variants of the `dplyr` verbs also work, such as transforming the 
-numeric columns using a quosure style lambda function, in this case squaring them
+Some of the variants of the `dplyr` verbs also work, such as transforming the
+numeric columns using a quosure style lambda function, in this case squaring
+them
 
 ```{r "mutate_if"}
 mutate_if(d, is.numeric, ~ .^2)
@@ -190,8 +194,9 @@ top of the printed output
 group_by(d, cyl, am)
 ```
 
-Other verbs are similarly implemented, and preserve row names where possible. For 
-example, selecting a liimted set of columns using non-standard evaluation (NSE)
+Other verbs are similarly implemented, and preserve row names where possible.
+For example, selecting a limited set of columns using non-standard evaluation
+(NSE)
 
 ```{r "rownames"}
 select(d, am, cyl)
@@ -215,8 +220,8 @@ Selecting specific rows by index
 slice(d, 3:6)
 ```
 
-These also work for grouped objects, and also preserve the rownames, e.g. selecting 
-the first two rows from _each group_ of `gear`
+These also work for grouped objects, and also preserve the rownames, e.g.
+selecting the first two rows from _each group_ of `gear`
 
 ```{r "grouped_slice"}
 group_by(d, gear) %>%
@@ -232,17 +237,17 @@ select(d, am, cyl) %>%
     rename2(foo = am)
 ```
 
-Row names are not preserved when there may be duplicates or they don't make 
-sense, otherwise the first label (according to the current de-duplication method, 
-in the case of `distinct`, this is via `BiocGenerics::duplicated`). This may have 
-complications for S4 columns.
+Row names are not preserved when there may be duplicates or they don't make
+sense, otherwise the first label (according to the current de-duplication
+method, in the case of `distinct`, this is via `BiocGenerics::duplicated`). This
+may have complications for S4 columns.
 
 ```{r "distinct"}
 distinct(d)
 ```
 
-Behaviours are ideally the same as those of `r CRANpkg("dplyr")` wherever possible, 
-for example a grouped tally
+Behaviours are ideally the same as those of `r CRANpkg("dplyr")` wherever
+possible, for example a grouped tally
 
 ```{r "group_tally"}
 group_by(d, cyl, am) %>%
@@ -257,7 +262,9 @@ count(d, gear, am, cyl)
 
 ## Citing `DFplyr`
 
-We hope that `r Biocpkg("DFplyr")` will be useful for your research. Please use the following information to cite the package and the overall approach. Thank you!
+We hope that `r Biocpkg("DFplyr")` will be useful for your research. Please use
+the following information to cite the package and the overall approach. Thank
+you!
 
 ```{r "citation"}
 ## Citation info
