@@ -8,6 +8,8 @@ SIGNIFICANT USER-VISIBLE CHANGES
 
 BUG FIXES
 
+* `summarise()` now prints the return value
+
 # DFplyr 0.0.2
 
 NEW FEATURES

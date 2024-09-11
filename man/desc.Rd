@@ -9,6 +9,9 @@ desc(x)
 \arguments{
 \item{x}{vector to transform}
 }
+\value{
+the input vector in a format that will be sorted in descending order.
+}
 \description{
 Transform a vector into a format that will be sorted in descending order.
 This is useful within \code{\link[dplyr:arrange]{arrange()}}.

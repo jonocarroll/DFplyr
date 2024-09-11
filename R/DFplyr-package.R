@@ -1,4 +1,4 @@
-#' #' Treat a `S4Vectors::DataFrame` as a `dplyr` data source
+#' Treat a `S4Vectors::DataFrame` as a `dplyr` data source
 #'
 #' Add \pkg{dplyr} compatibility to `S4Vectors::DataFrame`
 #' for use with a selection of \pkg{dplyr} verbs.

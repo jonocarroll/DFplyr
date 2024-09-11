@@ -4,7 +4,7 @@
 \name{DFplyr-package}
 \alias{DFplyr}
 \alias{DFplyr-package}
-\title{#' Treat a \code{S4Vectors::DataFrame} as a \code{dplyr} data source}
+\title{Treat a \code{S4Vectors::DataFrame} as a \code{dplyr} data source}
 \arguments{
 \item{x}{A \code{S4Vectors::DataFrame} object}
 }
