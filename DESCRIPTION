@@ -1,15 +1,18 @@
 Package: DFplyr
 Title: A `DataFrame` (`S4Vectors`) backend for `dplyr`
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: person("Jonathan", "Carroll", 
- email = "rpkg@jcarroll.com.au", 
- role = c("aut", "cre"), 
- comment = c(ORCID = "0000-0002-1404-5264"))
-Maintainer: Jonathan Carroll <rpkg@jcarroll.com.au>
-Description: Provides a backend to `dplyr` supporting `S4Vectors::DataFrame`.
+    email = "rpkg@jcarroll.com.au", 
+    role = c("aut", "cre"), 
+    comment = c(ORCID = "0000-0002-1404-5264"))
+Description: Provides `dplyr` verbs (`mutate`, `select`, `filter`, etc...) 
+    supporting `S4Vectors::DataFrame` objects. Importantly, this is achieved 
+    without conversion to an intermediate `tibble`. Adds grouping 
+    infrastructure to `DataFrame` which is respected by the transformation 
+    verbs.
+biocViews: DataRepresentation, Infrastructure, Software
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.2.3
 URL: https://github.com/jonocarroll/DFplyr
 BugReports: https://github.com/jonocarroll/DFplyr/issues
@@ -22,3 +25,11 @@ Imports:
     tidyselect,
     methods,
     BiocGenerics
+Suggests: 
+    BiocStyle,
+    knitr,
+    RefManageR,
+    rmarkdown,
+    sessioninfo,
+    testthat
+VignetteBuilder: knitr

@@ -1,0 +1,274 @@
+---
+title: "Example Usage"
+author: 
+  - name: Jonathan Carroll
+    email: rpkg@jcarroll.com.au
+output: 
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    code_folding: show
+date: "`r doc_date()`"
+package: "`r pkg_ver('DFplyr')`"
+vignette: >
+  %\VignetteIndexEntry{Example Usage}
+  %\VignetteEncoding{UTF-8}  
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    crop = NULL ## Related to https://stat.ethz.ch/pipermail/bioc-devel/2020-April/016656.html
+)
+```
+
+
+```{r vignetteSetup, echo=FALSE, message=FALSE, warning = FALSE}
+## Track time spent on making the vignette
+startTime <- Sys.time()
+
+## Bib setup
+library("RefManageR")
+
+## Write bibliography information
+bib <- c(
+    R = citation(),
+    BiocStyle = citation("BiocStyle")[1],
+    knitr = citation("knitr")[1],
+    RefManageR = citation("RefManageR")[1],
+    rmarkdown = citation("rmarkdown")[1],
+    sessioninfo = citation("sessioninfo")[1],
+    testthat = citation("testthat")[1],
+    DFplyr = citation("DFplyr")[1],
+    dplyr = citation("dplyr")[1],
+    tidyselect = citation("tidyselect")[1]
+)
+```
+
+# Basics
+
+## Install `DFplyr`
+
+`r Biocpkg("DFplyr")` is a `R` package available via the [Bioconductor](http://bioconductor.org) repository for packages and can be downloaded via `BiocManager::install()`:
+
+```{r "install", eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+      install.packages("BiocManager")
+  }
+
+BiocManager::install("DFplyr")
+
+## Check that you have a valid Bioconductor installation
+BiocManager::valid()
+```
+
+## Background
+
+`r Biocpkg("DFplyr")` is inspired by `r CRANpkg("dplyr")` which implements a wide 
+variety of common data manipulations (`mutate`, `select`, `filter`) but which 
+only operates on objects of class `data.frame` or `tibble` (from `r CRANpkg("tibble")`).
+
+When working with `r Biocpkg("S4Vectors")` `DataFrame`s - which are frequently used 
+as components of, for example `r Biocpkg("SummarizedExperiment")` objects - a common 
+workaround is to convert the `DataFrame` to a `tibble` in order to then use 
+`r CRANpkg("dplyr")` functions to manipulate the contents, before converting back 
+to a `DataFrame`. 
+
+This has several drawbacks, including the fact that `tibble` does not support 
+rownames (and `r CRANpkg("dplyr")` frequently does not preserve them), does not 
+support S4 columns (e.g. `r Biocpkg("IRanges")` vectors), and requires the back 
+and forth transformation any time manipulation is desired.
+
+# Quick start to using `DFplyr`
+
+```{r "start", message=FALSE}
+library("DFplyr")
+```
+
+To being with, we create an `r Biocpkg("S4Vectors")` `DataFrame`, including some
+S4 columns
+
+```{r "create_d", message=FALSE}
+library(S4Vectors)
+m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
+d <- as(m, "DataFrame")
+d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width=10))
+d$grY <- GenomicRanges::GRanges("chrY", IRanges::IRanges(1:32, width = 10))
+d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
+d
+```
+
+This will appear in RStudio's environment pane as a 
+
+``` 
+Formal class DataFrame (dplyr-compatible)
+```
+
+when using `r Biocpkg("DFplyr")`. No interference with the actual object is
+required, but this helps identify that `r CRANpkg("dplyr")`-compatibility is
+available.
+
+`DataFrame`s can then be used in `r CRANpkg("dplyr")`-like calls the same as
+`data.frame` or `tibble` objects. Support for working with S4 columns is enabled
+provided they have appropriate functions. Adding multiple columns will result in
+the new columns being created in alphabetical order. For example, adding a new 
+column `newvar` which is the sum of the `cyl` and `hp` columns
+
+```{r "mutate_newvar"}
+mutate(d, newvar = cyl + hp)
+```
+
+or doubling the `nl` column as `nl2`
+
+```{r "nl2"}
+mutate(d, nl2 = nl * 2)
+```
+
+or calculating the `length()` of the `nl` column cells as `length_nl`
+
+```{r "length_nl"}
+mutate(d, length_nl = lengths(nl))
+```
+
+Transformations can involve S4-related functions, such as extracting the 
+`seqnames()`, `strand()`, and `end()` of the `grX` column
+
+```{r "s4cols"}
+mutate(d, 
+       chr = GenomeInfoDb::seqnames(grX), 
+       strand_X = BiocGenerics::strand(grX), 
+       end_X = BiocGenerics::end(grX))
+```
+
+the object returned remains a standard `DataFrame`, and further calls can be 
+piped with `%>%`, in this case extracting the newly created `newvar` column
+
+```{r "pipe"}
+mutate(d, newvar = cyl + hp) %>%
+  pull(newvar)
+```
+
+Some of the variants of the `dplyr` verbs also work, such as transforming the 
+numeric columns using a quosure style lambda function, in this case squaring them
+
+```{r "mutate_if"}
+mutate_if(d, is.numeric, ~.^2)
+```
+
+or extracting the `start` of all of the `"GRanges"` columns
+
+```{r "mutate_if_granges"}
+mutate_if(d, ~isa(., "GRanges"), BiocGenerics::start)
+```
+
+Use of `r CRANpkg("tidyselect")` helpers is limited to within `vars()`
+calls and using the `_at` variants
+
+```{r "at_mutate"}
+mutate_at(d, vars(starts_with("c")), ~.^2)
+```
+
+and also works with other verbs
+
+```{r "at_select"}
+select_at(d, vars(starts_with("gr")))
+```
+
+Importantly, grouped operations are supported. `DataFrame` does not 
+natively support groups (the same way that `data.frame` does not) so these
+are implemented specifically for `DFplyr` with group information shown at the 
+top of the printed output
+
+```{r "group_by"}
+group_by(d, cyl, am)
+```
+
+Other verbs are similarly implemented, and preserve row names where possible. For 
+example, selecting a liimted set of columns using non-standard evaluation (NSE)
+
+```{r "rownames"}
+select(d, am, cyl)
+```
+
+Arranging rows according to the ordering of a column
+
+```{r "rownames_arrange"}
+arrange(d, desc(hp))
+```
+
+Filtering to only specific values appearing in a column
+
+```{r "rownames_filter"}
+filter(d, am == 0) 
+```
+
+Selecting specific rows by index
+
+```{r "rownames_slice"}
+slice(d, 3:6)
+```
+
+These also work for grouped objects, and also preserve the rownames, e.g. selecting 
+the first two rows from _each group_ of `gear`
+
+```{r "grouped_slice"}
+group_by(d, gear) %>% 
+  slice(1:2)
+```
+
+`rename` is itself renamed to `rename2` due to conflicts between 
+`r CRANpkg("dplyr")` and `r Biocpkg("S4Vectors")`, but works in the 
+`r CRANpkg("dplyr")` sense of taking `new = old` replacements with NSE syntax
+
+```{r "rename2"}
+select(d, am, cyl) %>%
+  rename2(foo = am)
+```
+
+Row names are not preserved when there may be duplicates or they don't make 
+sense, otherwise the first label (according to the current de-duplication method, 
+in the case of `distinct`, this is via `BiocGenerics::duplicated`). This may have 
+complications for S4 columns.
+
+```{r "distinct"}
+distinct(d)
+```
+
+Behaviours are ideally the same as those of `r CRANpkg("dplyr")` wherever possible, 
+for example a grouped tally
+
+```{r "group_tally"}
+group_by(d, cyl, am) %>%
+  tally(gear)
+```
+
+or a count with weights
+
+```{r "count"}
+count(d, gear, am, cyl)
+```
+
+## Citing `DFplyr`
+
+We hope that `r Biocpkg("DFplyr")` will be useful for your research. Please use the following information to cite the package and the overall approach. Thank you!
+
+```{r "citation"}
+## Citation info
+citation("DFplyr")
+```
+
+
+## Session Information.
+
+```{r reproduce3, echo=FALSE}
+## Session info
+library("sessioninfo")
+options(width = 120)
+session_info()
+```
