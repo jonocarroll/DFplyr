@@ -6,10 +6,10 @@ output: github_document
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
+    collapse = TRUE,
+    comment = "#>",
+    fig.path = "man/figures/README-",
+    out.width = "100%"
 )
 ```
 # DFplyr
@@ -37,7 +37,7 @@ First create an S4Vectors `DataFrame`, including S4 columns if desired
 library(S4Vectors)
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
 d <- as(m, "DataFrame")
-d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width=10))
+d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width = 10))
 d$grY <- GenomicRanges::GRanges("chrY", IRanges::IRanges(1:32, width = 10))
 d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
 d
@@ -61,10 +61,11 @@ mutate(d, nl2 = nl * 2)
 
 mutate(d, length_nl = lengths(nl))
 
-mutate(d, 
-       chr = GenomeInfoDb::seqnames(grX), 
-       strand_X = BiocGenerics::strand(grX), 
-       end_X = BiocGenerics::end(grX))
+mutate(d,
+    chr = GenomeInfoDb::seqnames(grX),
+    strand_X = BiocGenerics::strand(grX),
+    end_X = BiocGenerics::end(grX)
+)
 ```
 
 the object returned remains a standard `DataFrame`, and further calls can be 
@@ -73,22 +74,22 @@ piped with `%>%`
 
 ```{r}
 mutate(d, newvar = cyl + hp) %>%
-  pull(newvar)
+    pull(newvar)
 ```
 
 Some of the variants of the `dplyr` verbs also work
 
 ```{r}
-mutate_if(d, is.numeric, ~.^2)
+mutate_if(d, is.numeric, ~ .^2)
 
-mutate_if(d, ~inherits(., "GRanges"), BiocGenerics::start)
+mutate_if(d, ~ inherits(., "GRanges"), BiocGenerics::start)
 ```
 
 Use of `tidyselect` helpers is limited to within `dplyr::vars()` calls and using 
 the `_at` variants
 
 ```{r}
-mutate_at(d, vars(starts_with("c")), ~.^2)
+mutate_at(d, vars(starts_with("c")), ~ .^2)
 
 select_at(d, vars(starts_with("gr")))
 ```
@@ -108,12 +109,12 @@ select(d, am, cyl)
 
 arrange(d, desc(hp))
 
-filter(d, am == 0) 
+filter(d, am == 0)
 
 slice(d, 3:6)
 
-group_by(d, gear) %>% 
-  slice(1:2)
+group_by(d, gear) %>%
+    slice(1:2)
 ```
 
 `rename` is itself renamed to `rename2` due to conflicts between {dplyr} and 
@@ -122,7 +123,7 @@ with NSE syntax
 
 ```{r}
 select(d, am, cyl) %>%
-  rename2(foo = am)
+    rename2(foo = am)
 ```
 
 Row names are not preserved when there may be duplicates or they don't make 
@@ -134,7 +135,7 @@ complications for S4 columns.
 distinct(d)
 
 group_by(d, cyl, am) %>%
-  tally(gear)
+    tally(gear)
 
 count(d, gear, am, cyl)
 ```

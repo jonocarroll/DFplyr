@@ -59,8 +59,8 @@ bib <- c(
 
 ```{r "install", eval = FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
-      install.packages("BiocManager")
-  }
+    install.packages("BiocManager")
+}
 
 BiocManager::install("DFplyr")
 
@@ -98,7 +98,7 @@ S4 columns
 library(S4Vectors)
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
 d <- as(m, "DataFrame")
-d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width=10))
+d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width = 10))
 d$grY <- GenomicRanges::GRanges("chrY", IRanges::IRanges(1:32, width = 10))
 d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
 d
@@ -140,10 +140,11 @@ Transformations can involve S4-related functions, such as extracting the
 `seqnames()`, `strand()`, and `end()` of the `grX` column
 
 ```{r "s4cols"}
-mutate(d, 
-       chr = GenomeInfoDb::seqnames(grX), 
-       strand_X = BiocGenerics::strand(grX), 
-       end_X = BiocGenerics::end(grX))
+mutate(d,
+    chr = GenomeInfoDb::seqnames(grX),
+    strand_X = BiocGenerics::strand(grX),
+    end_X = BiocGenerics::end(grX)
+)
 ```
 
 the object returned remains a standard `DataFrame`, and further calls can be 
@@ -151,27 +152,27 @@ piped with `%>%`, in this case extracting the newly created `newvar` column
 
 ```{r "pipe"}
 mutate(d, newvar = cyl + hp) %>%
-  pull(newvar)
+    pull(newvar)
 ```
 
 Some of the variants of the `dplyr` verbs also work, such as transforming the 
 numeric columns using a quosure style lambda function, in this case squaring them
 
 ```{r "mutate_if"}
-mutate_if(d, is.numeric, ~.^2)
+mutate_if(d, is.numeric, ~ .^2)
 ```
 
 or extracting the `start` of all of the `"GRanges"` columns
 
 ```{r "mutate_if_granges"}
-mutate_if(d, ~isa(., "GRanges"), BiocGenerics::start)
+mutate_if(d, ~ isa(., "GRanges"), BiocGenerics::start)
 ```
 
 Use of `r CRANpkg("tidyselect")` helpers is limited to within `vars()`
 calls and using the `_at` variants
 
 ```{r "at_mutate"}
-mutate_at(d, vars(starts_with("c")), ~.^2)
+mutate_at(d, vars(starts_with("c")), ~ .^2)
 ```
 
 and also works with other verbs
@@ -205,7 +206,7 @@ arrange(d, desc(hp))
 Filtering to only specific values appearing in a column
 
 ```{r "rownames_filter"}
-filter(d, am == 0) 
+filter(d, am == 0)
 ```
 
 Selecting specific rows by index
@@ -218,8 +219,8 @@ These also work for grouped objects, and also preserve the rownames, e.g. select
 the first two rows from _each group_ of `gear`
 
 ```{r "grouped_slice"}
-group_by(d, gear) %>% 
-  slice(1:2)
+group_by(d, gear) %>%
+    slice(1:2)
 ```
 
 `rename` is itself renamed to `rename2` due to conflicts between 
@@ -228,7 +229,7 @@ group_by(d, gear) %>%
 
 ```{r "rename2"}
 select(d, am, cyl) %>%
-  rename2(foo = am)
+    rename2(foo = am)
 ```
 
 Row names are not preserved when there may be duplicates or they don't make 
@@ -245,7 +246,7 @@ for example a grouped tally
 
 ```{r "group_tally"}
 group_by(d, cyl, am) %>%
-  tally(gear)
+    tally(gear)
 ```
 
 or a count with weights
