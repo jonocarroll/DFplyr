@@ -24,11 +24,11 @@
         } else {
             m <- rbind(
                 S4Vectors::makeNakedCharacterMatrixForDisplay(
-                  head(object, nhead)
+                    head(object, nhead)
                 ),
                 rbind(rep.int("...", x_ncol)),
                 S4Vectors::makeNakedCharacterMatrixForDisplay(
-                  tail(object, ntail)
+                    tail(object, ntail)
                 )
             )
             rownames(m) <- .make_rownames_for_RectangularData_display(
@@ -45,8 +45,8 @@
 setMethod("show", "DataFrame", .show_DF)
 
 .make_rownames_for_RectangularData_display <- function(x_rownames,
-                                                       nrow,
-                                                       nhead, ntail) {
+    nrow,
+    nhead, ntail) {
     p1 <- ifelse(nhead == 0L, 0L, 1L)
     p2 <- ifelse(ntail == 0L, 0L, ntail - 1L)
     s1 <- s2 <- character(0)
@@ -72,7 +72,7 @@ setMethod("show", "DataFrame", .show_DF)
     matrix(
         unlist(
             lapply(x, function(col) {
-              paste0("<", .classNameForDisplay(col), ">")
+                paste0("<", .classNameForDisplay(col), ">")
             }),
             use.names = FALSE
         ),
