@@ -20,6 +20,10 @@ test_that("mutate works with regular columns", {
 })
 
 test_that("mutate works with S4 columns", {
+    skip_if_not_installed("GenomicRanges")
+    skip_if_not_installed("IRanges")
+    skip_if_not_installed("GenomeInfoDb")
+
     D <- S4Vectors::DataFrame(mtcars)
     D$gr <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width = 10))
 
