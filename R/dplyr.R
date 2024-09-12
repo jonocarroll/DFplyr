@@ -138,12 +138,13 @@ rename2 <- function(.data, ...) {
 #' @inherit dplyr::count
 #' @importFrom rlang quos quo_squash enquo
 #' @export
-count.DataFrame <- function(x,
-    ...,
-    wt = NULL,
-    sort = FALSE,
-    name = "n",
-    .drop = group_by_drop_default(x)) {
+count.DataFrame <- function(
+        x,
+        ...,
+        wt = NULL,
+        sort = FALSE,
+        name = "n",
+        .drop = group_by_drop_default(x)) {
     if (!inherits(x, "DataFrame")) {
         return(
             dplyr::count(x,
@@ -163,20 +164,20 @@ count.DataFrame <- function(x,
         if (!length(EXPRS)) {
             RET <- select(
                 mutate(groups,
-                    n = lengths(.data$.rows)
+                    n = lengths(.data[[".rows"]])
                 ),
-                -.data$.rows
+                -".rows"
             )
             names(RET)[ncol(RET)] <- name
             RET <- RET[RET[[name]] != 0, ]
-            return(RET)
+            return(methods::as(RET, "DataFrame"))
         }
         split_data <- lapply(seq_len(nrow(groups)), function(xx) {
             .data_grp <- x[groups$.rows[xx][[1]], , drop = FALSE]
             tbl_grp <- with(.data_grp, do.call(table, EXPRS))
             cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
         })
-        RET <- do.call(rbind, split_data)
+        RET <- methods::as(do.call(rbind, split_data), "DataFrame")
     } else {
         RET <- methods::as(with(x, do.call(table, EXPRS)), "DataFrame")
     }
@@ -236,7 +237,8 @@ summarise.DataFrame <- function(.data, ...) {
 #' @export
 summarize.DataFrame <- summarise.DataFrame
 
-#' @inherit dplyr::group_data
+#' @inherit dplyr::group_data title description
+#' @param .data a [S4Vectors::DataFrame()]
 #' @importFrom tibble tibble
 #' @return a [tibble::tibble()] of group data
 #' @export
@@ -250,8 +252,9 @@ group_data.DataFrame <- function(.data) {
     }
 }
 
-#' @inherit dplyr::group_vars
+#' @inherit dplyr::group_vars title description
 #' @importFrom rlang as_string
+#' @param x a [S4Vectors::DataFrame()], likely grouped
 #' @return the grouping variables as a character vector
 #' @export
 group_vars.DataFrame <- function(x) {
@@ -267,19 +270,22 @@ group_vars.DataFrame <- function(x) {
 #' @importFrom rlang quos quo_squash as_string syms
 #' @importFrom tibble as_tibble
 #' @export
-group_by.DataFrame <- function(.data,
-    ...,
-    add = FALSE,
-    .drop = group_by_drop_default(.data)) {
+group_by.DataFrame <- function(
+        .data,
+        ...,
+        add = FALSE,
+        .drop = group_by_drop_default(.data)) {
     if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
         groupvars <- lapply(
             rlang::quos(...),
             function(x) rlang::as_string(rlang::quo_squash(x))
         )
         uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
-        flagged <- merge(mutate(.data, rowid = seq_len(nrow(.data))),
+        flagged <- S4Vectors::merge(
+            mutate(.data, rowid = seq_len(nrow(.data))),
             mutate(uniques, flag = seq_len(nrow(uniques))),
-            by = unlist(groupvars), sort = FALSE
+            by = unlist(groupvars),
+            sort = FALSE
         )
         groups <- split(as.integer(flagged$rowid), flagged$flag)
         uniques <- tibble::as_tibble(as.data.frame(uniques))
@@ -335,6 +341,10 @@ distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
 
 #' @inherit dplyr::pull
 #' @export
+#' @examples
+#' d <- S4Vectors::DataFrame(mtcars)
+#' pull(d, cyl)
+#'
 pull.DataFrame <- function(.data, var = -1, name = NULL, ...) {
     var <- tidyselect::vars_pull(names(.data), !!rlang::enquo(var))
     name <- rlang::enquo(name)
@@ -394,10 +404,11 @@ tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = NULL) {
 
 #' @importFrom rlang caller_arg caller_env inform
 #' @keywords internal
-.check_n_name <- function(name,
-    vars,
-    arg = rlang::caller_arg(name),
-    call = rlang::caller_env()) {
+.check_n_name <- function(
+        name,
+        vars,
+        arg = rlang::caller_arg(name),
+        call = rlang::caller_env()) {
     if (is.null(name)) {
         name <- .n_name(vars)
         if (name != "n") {

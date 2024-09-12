@@ -6,6 +6,9 @@
 \usage{
 \method{group_vars}{DataFrame}(x)
 }
+\arguments{
+\item{x}{a [S4Vectors::DataFrame()], likely grouped}
+}
 \value{
 the grouping variables as a character vector
 }
@@ -30,17 +33,4 @@ that gives the group that each row belongs to.
 
 See \link[dplyr]{context} for equivalent functions that return values for the \emph{current}
 group.
-}
-\examples{
-df <- tibble(x = c(1,1,2,2))
-group_vars(df)
-group_rows(df)
-group_data(df)
-group_indices(df)
-
-gf <- group_by(df, x)
-group_vars(gf)
-group_rows(gf)
-group_data(gf)
-group_indices(gf)
 }

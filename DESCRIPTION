@@ -27,6 +27,9 @@ Imports:
     BiocGenerics
 Suggests: 
     BiocStyle,
+    GenomeInfoDb,
+    GenomicRanges,
+    IRanges,
     knitr,
     RefManageR,
     rmarkdown,
