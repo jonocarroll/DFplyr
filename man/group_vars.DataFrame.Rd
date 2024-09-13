@@ -7,7 +7,7 @@
 \method{group_vars}{DataFrame}(x)
 }
 \arguments{
-\item{x}{a [S4Vectors::DataFrame()], likely grouped}
+\item{x}{a \code{\link[S4Vectors:DataFrame-class]{S4Vectors::DataFrame()}}, likely grouped}
 }
 \value{
 the grouping variables as a character vector

@@ -19,12 +19,11 @@ BugReports: https://github.com/jonocarroll/DFplyr/issues
 Depends: 
     dplyr
 Imports: 
-    S4Vectors,
-    rlang,
-    tibble,
-    tidyselect,
+    BiocGenerics,
     methods,
-    BiocGenerics
+    rlang,
+    S4Vectors,
+    tidyselect
 Suggests: 
     BiocStyle,
     GenomeInfoDb,
@@ -34,6 +33,8 @@ Suggests:
     RefManageR,
     rmarkdown,
     sessioninfo,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    tibble
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)

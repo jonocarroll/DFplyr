@@ -7,10 +7,10 @@
 \method{group_data}{DataFrame}(.data)
 }
 \arguments{
-\item{.data}{a [S4Vectors::DataFrame()]}
+\item{.data}{a \code{\link[S4Vectors:DataFrame-class]{S4Vectors::DataFrame()}}}
 }
 \value{
-a [tibble::tibble()] of group data
+a \code{data.frame} of group data
 }
 \description{
 This collection of functions accesses data about grouped data frames in

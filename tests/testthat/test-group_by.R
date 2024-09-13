@@ -5,7 +5,7 @@ test_that("group_by works with regular columns", {
     expect_s4_class(g, "DataFrame")
     expect_identical(nrow(g), 32L)
     expect_identical(names(g), names(mtcars))
-    expect_equal(g, d, ignore_attr = TRUE)
+    expect_equal(ungroup(g), d)
 
     expect_identical(group_vars(g), c("am", "cyl"))
     expect_identical(group_data(g)$am, c(rep(0, 3), rep(1, 3)))

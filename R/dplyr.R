@@ -239,16 +239,16 @@ summarize.DataFrame <- summarise.DataFrame
 
 #' @inherit dplyr::group_data title description
 #' @param .data a [S4Vectors::DataFrame()]
-#' @importFrom tibble tibble
-#' @return a [tibble::tibble()] of group data
+#' @return a `data.frame` of group data
 #' @export
 group_data.DataFrame <- function(.data) {
-    group_attr <- attr(.data@listData, "groups")
+    # group_attr <- attr(.data@listData, "groups")
+    group_attr <- get_group_data(.data)
     if (!is.null(group_attr) && nrow(group_attr) > 1L) {
         group_attr
     } else {
         rows <- list(seq_len(nrow(.data)))
-        tibble::tibble(`:=`(".rows", rows))
+        data.frame(.rows = I(rows))
     }
 }
 
@@ -268,13 +268,11 @@ group_vars.DataFrame <- function(x) {
 
 #' @inherit dplyr::group_by
 #' @importFrom rlang quos quo_squash as_string syms
-#' @importFrom tibble as_tibble
 #' @export
-group_by.DataFrame <- function(
-        .data,
-        ...,
-        add = FALSE,
-        .drop = group_by_drop_default(.data)) {
+group_by.DataFrame <- function(.data,
+    ...,
+    add = FALSE,
+    .drop = group_by_drop_default(.data)) {
     if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
         groupvars <- lapply(
             rlang::quos(...),
@@ -288,22 +286,50 @@ group_by.DataFrame <- function(
             sort = FALSE
         )
         groups <- split(as.integer(flagged$rowid), flagged$flag)
-        uniques <- tibble::as_tibble(as.data.frame(uniques))
+        uniques <- as.data.frame(uniques)
         uniques$.rows <- unname(groups)
         groupdata <- uniques[with(
             uniques,
             do.call(order, rlang::syms(groupvars))
         ), ]
-        attr(.data@listData, "groups") <- groupdata
+        rownames(groupdata) <- seq_len(nrow(groupdata))
+        .data <- set_group_data(.data, groupdata, .drop)
     }
     .data
+}
+
+#' Set and Get Group Data on a DataFrame
+#'
+#' The location of group data is an internal implemnetation
+#' detail, so these get and set methods enable interfacing
+#' with that data.
+#'
+#' @rdname groupdata
+#' @name group_data
+#' @param x A [S4Vectors::DataFrame] on which to set group data.
+#' @param g Group data (a `data.frame`).
+#' @param .drop Drop groups formed by factor levels that don't appear in the data?
+#' @return For `set_group_data`, the input `x` with group data set as metadata.
+#'     For `get_group_data`, the group data that is set on `x`.
+#' @keywords internal
+set_group_data <- function(x, g, .drop = group_by_drop_default(x)) {
+    if (!is.null(g)) {
+        attr(g, ".drop") <- .drop
+    }
+    metadata(x)$groups <- g
+    x
+}
+
+#' @rdname groupdata
+#' @keywords internal
+get_group_data <- function(x) {
+    metadata(x)$groups
 }
 
 #' @inherit dplyr::ungroup
 #' @export
 ungroup.DataFrame <- function(x, ...) {
-    attr(x@listData, "groups") <- NULL
-    x
+    set_group_data(x, NULL)
 }
 
 #' @inherit dplyr::arrange
@@ -358,7 +384,6 @@ pull.DataFrame <- function(.data, var = -1, name = NULL, ...) {
 #' @inherit dplyr::slice
 #' @export
 slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
-    # .data[..., ]
     groupvars <- group_vars(.data)
     if (length(groupvars) > 0L) {
         groups <- group_data(.data)
@@ -372,23 +397,23 @@ slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
     }
 }
 
-#' @keywords internal
-convert_with_group <- function(.data) {
-    t <- tibble::as_tibble(.data)
-    if (!is.null(group_data(.data)) && nrow(group_data(.data)) > 1L) {
-        for (gvar in group_vars(.data)) {
-            t <- dplyr::group_by(t, !!rlang::sym(gvar), add = TRUE)
-        }
-    }
-    t
-}
+# #' @keywords internal
+# convert_with_group <- function(.data) {
+#     t <- tibble::as_tibble(.data)
+#     if (!is.null(group_data(.data)) && nrow(group_data(.data)) > 1L) {
+#         for (gvar in group_vars(.data)) {
+#             t <- dplyr::group_by(t, !!rlang::sym(gvar), add = TRUE)
+#         }
+#     }
+#     t
+# }
 
-#' @keywords internal
-restore_DF <- function(.data, rn) {
-    DF <- methods::as(.data, "DataFrame")
-    rownames(DF) <- rn
-    DF
-}
+# #' @keywords internal
+# restore_DF <- function(.data, rn) {
+#     DF <- methods::as(.data, "DataFrame")
+#     rownames(DF) <- rn
+#     DF
+# }
 
 #' @inherit dplyr::tally
 #' @export

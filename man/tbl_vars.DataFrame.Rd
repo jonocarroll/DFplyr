@@ -10,7 +10,7 @@
 \item{x}{A tbl object}
 }
 \value{
-all variables, with a `groups` attribute when grouped.
+all variables, with a \code{groups} attribute when grouped.
 }
 \description{
 \code{tbl_vars()} returns all variables while \code{tbl_nongroup_vars()}
