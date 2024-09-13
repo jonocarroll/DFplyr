@@ -15,7 +15,8 @@ get_group_data(x)
 
 \item{g}{Group data (a \code{data.frame}).}
 
-\item{.drop}{Drop groups formed by factor levels that don't appear in the data?}
+\item{.drop}{Drop groups formed by factor levels that don't appear in
+the data?}
 }
 \value{
 For \code{set_group_data}, the input \code{x} with group data set as metadata.

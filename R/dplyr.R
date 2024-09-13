@@ -308,7 +308,8 @@ group_by.DataFrame <- function(.data,
 #' @name group_data
 #' @param x A [S4Vectors::DataFrame] on which to set group data.
 #' @param g Group data (a `data.frame`).
-#' @param .drop Drop groups formed by factor levels that don't appear in the data?
+#' @param .drop Drop groups formed by factor levels that don't appear in
+#'     the data?
 #' @return For `set_group_data`, the input `x` with group data set as metadata.
 #'     For `get_group_data`, the group data that is set on `x`.
 #' @keywords internal
