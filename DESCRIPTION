@@ -30,7 +30,6 @@ Suggests:
     GenomicRanges,
     IRanges,
     knitr,
-    RefManageR,
     rmarkdown,
     sessioninfo,
     testthat (>= 3.0.0),
