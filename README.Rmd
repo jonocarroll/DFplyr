@@ -30,6 +30,19 @@ You can install the development version from [GitHub](https://github.com/) with:
 # install.packages("devtools")
 devtools::install_github("jonocarroll/DFplyr")
 ```
+
+You can install from [Bioconductor](https://bioconductor.org) with:
+
+``` r
+if (!require("BiocManager", quietly =TRUE))
+    install.packages("BiocManager")
+
+# The following initializes usage of Bioc devel
+BiocManager::install(version='devel')
+
+BiocManager::install("DFplyr")
+```
+
 ## Examples
 
 First create an S4Vectors `DataFrame`, including S4 columns if desired
