@@ -20,8 +20,8 @@ test_that("join works with regular columns", {
   expect_s4_class(Res_inner, "DataFrame")
   expect_s4_class(Res_full, "DataFrame")
 
-  expect_identical(arrange(Res_left, name), arrange(as(res_left, "DataFrame"), name))
+  expect_identical(Res_left, as(res_left, "DataFrame"))
   expect_identical(arrange(Res_right, name), arrange(as(res_right, "DataFrame"), name))
-  expect_identical(arrange(Res_inner, name), arrange(as(res_inner, "DataFrame"), name))
+  expect_identical(Res_inner, as(res_inner, "DataFrame"))
   expect_identical(arrange(Res_full, name), arrange(as(res_full, "DataFrame"), name))
 })

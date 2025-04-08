@@ -14,9 +14,14 @@ join_internal <- function(x, y, by = NULL, ...) {
   if (is.null(by))
     by <- check_common_columns(names(x), names(y))
 
-  grps <- get_group_data(x)
+  grps <- group_vars(x)
   x <- S4Vectors::merge(x, y, by = by, sort = FALSE, ...)
-  set_group_data(x, grps)
+
+  # if no grouping return object
+  if(length(grps) == 0)
+    return(x)
+  # else rebuild groups with new DF
+  group_by(x, !!!rlang::syms(grps))
 }
 
 
