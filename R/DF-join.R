@@ -10,13 +10,26 @@ check_common_columns <- function(names_x, names_y) {
   return(by)
 }
 
+is_leftish <- function(...) {
+  # does this look like a non-right join?
+  args <- list(...)
+  if (utils::hasName(args, "all.y") && args$all.y) return(FALSE)
+  TRUE
+}
+
 join_internal <- function(x, y, by = NULL, ...) {
+  use_rownames <- is_leftish(...)
+  if (use_rownames) x$...rownames <- rownames(x)
   if (is.null(by))
     by <- check_common_columns(names(x), names(y))
 
   grps <- group_vars(x)
-  x <- S4Vectors::merge(x, y, by = by, sort = FALSE, ...)
 
+  x <- S4Vectors::merge(x, y, by = by, sort = FALSE, ...)
+  if (use_rownames) rownames(x) <- x$...rownames
+  if (use_rownames) x$...rownames <- NULL
+
+  grps <- intersect(grps, colnames(x)) # <-- preserve remaining groups
   # if no grouping return object
   if(length(grps) == 0)
     return(x)
