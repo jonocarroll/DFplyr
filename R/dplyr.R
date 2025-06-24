@@ -495,15 +495,39 @@ group_intersect <- function(x, new) {
   intersect(group_vars(x), names(new))
 }
 
+
+.s4_subset <- function(x, i, j, ..., drop = TRUE) {
+  if (!isTRUEorFALSE(drop)) stop("'drop' must be TRUE or FALSE")
+  if (length(list(...)) > 0L) warning("parameters in '...' not supported")
+
+  ## NOTE: matrix-style subsetting by logical matrix not supported.
+  list_style_subsetting <- (nargs() - !missing(drop)) < 3L
+  if (list_style_subsetting || !missing(j)) {
+    if (list_style_subsetting) {
+      if (!missing(drop))
+        warning("'drop' argument ignored by list-style subsetting")
+      if (missing(i)) return(x)
+      j <- i
+    }
+    x <- S4Vectors::extractCOLS(x, j)
+    if (list_style_subsetting) return(x)
+  }
+  if (!missing(i)) x <- S4Vectors::extractROWS(x, i)
+  if (missing(drop))
+    # drop by default if only one column left
+    drop <- ncol(x) == 1L
+  if (drop) {
+    ## one column left
+    if (ncol(x) == 1L) return(x[[1L]])
+    ## one row left
+    if (nrow(x) == 1L) return(methods::as(x, "list"))
+  }
+  x
+}
+
+
 .grp_subset <- function(x, i, j, ..., drop = FALSE) {
-  if (is.null(get_group_data(x)))
-    return(getMethod("[", "DataFrame", where = asNamespace("S4Vectors"))(
-      x,
-      i,
-      j,
-      ...,
-      drop = drop
-    ))
+  if (is.null(get_group_data(x))) return(.s4_subset(x, i, j, ..., drop = drop))
   out <- ungroup(x)[i, j, drop = drop]
   if (drop) {
     out
@@ -520,7 +544,7 @@ group_intersect <- function(x, new) {
 setMethod("[", "DataFrame", .grp_subset)
 
 .grp_bindROWS <- function(x, objects = list()) {
-  combined <- getMethod(
+  combined <- methods::getMethod(
     "bindROWS",
     "DataFrame",
     where = asNamespace("S4Vectors")
