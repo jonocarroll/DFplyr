@@ -2,7 +2,7 @@
 % Please edit documentation in R/dplyr.R
 \name{[,DataFrame-method}
 \alias{[,DataFrame-method}
-\title{Subset}
+\title{Subset a DataFrame}
 \usage{
 \S4method{[}{DataFrame}(x, i, j, ..., drop = FALSE)
 }
@@ -18,5 +18,5 @@
 \item{drop}{drop dimensions?}
 }
 \description{
-Subset
+Subset a DataFrame
 }

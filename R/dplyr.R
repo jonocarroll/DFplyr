@@ -127,15 +127,27 @@ select.DataFrame <- function(.data, ...) {
   .data
 }
 
-#' @inherit dplyr::rename
 #' @importFrom rlang quos quo_squash set_names
 #' @importFrom S4Vectors rename
-#' @export
 #'
-rename2 <- function(.data, ...) {
+.rename <- function(x, ...) {
   FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  ## S4Vectors::rename not imported as it would mask the existing generic
-  S4Vectors::rename(.data, rlang::set_names(names(FNS), unlist(FNS)))
+  methods::getMethod(
+    "rename",
+    "Vector",
+    where = asNamespace("S4Vectors")
+  )(x, rlang::set_names(names(FNS), unlist(FNS)))
+}
+
+#' @export
+setMethod("rename", "DataFrame", .rename)
+
+#' @export
+rename2 <- function(.data, ...) {
+  .Deprecated(
+    "rename",
+    msg = "DFplyr now properly supports rename with NSE syntax"
+  )
 }
 
 #' @inherit dplyr::count
@@ -548,6 +560,7 @@ group_intersect <- function(x, new) {
 #' @param j columns to subset
 #' @param ... other params, passed to regular `S4Vectors` subsetting
 #' @param drop drop dimensions?
+#' @export
 setMethod("[", "DataFrame", .grp_subset)
 
 .grp_bindROWS <- function(x, objects = list()) {
@@ -565,4 +578,5 @@ setMethod("[", "DataFrame", .grp_subset)
   group_by(ungroup(combined), !!!group_vars(x))
 }
 
+#' @export
 setMethod("bindROWS", "DataFrame", .grp_bindROWS)
