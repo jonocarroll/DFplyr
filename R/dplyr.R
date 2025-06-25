@@ -541,6 +541,13 @@ group_intersect <- function(x, new) {
   }
 }
 
+#' Subset a DataFrame
+#'
+#' @param x a `DataFrame` to be subset
+#' @param i rows to subset
+#' @param j columns to subset
+#' @param ... other params, passed to regular `S4Vectors` subsetting
+#' @param drop drop dimensions?
 setMethod("[", "DataFrame", .grp_subset)
 
 .grp_bindROWS <- function(x, objects = list()) {
