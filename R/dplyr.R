@@ -139,9 +139,15 @@ select.DataFrame <- function(.data, ...) {
   )(x, rlang::set_names(names(FNS), unlist(FNS)))
 }
 
+#' Rename Columns of a DataFrame
+#' @param x a DataFrame
+#' @param ... NSE syntax; `new_name = old_name` to rename selected variables
 #' @export
 setMethod("rename", "DataFrame", .rename)
 
+#' Rename Columns of a DataFrame (deprecated)
+#' @param .data a DataFrame
+#' @param ... columns to be renamed with syntax `new = old`
 #' @export
 rename2 <- function(.data, ...) {
   .Deprecated(
@@ -295,6 +301,9 @@ group_by.DataFrame <- function(
       rlang::quos(...),
       function(x) rlang::as_string(rlang::quo_squash(x))
     )
+    for (v in groupvars) {
+      if (!utils::hasName(.data, v)) stop("Column '", v, "' not found in data")
+    }
     uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
     flagged <- S4Vectors::merge(
       mutate(.data, rowid = seq_len(nrow(.data))),
@@ -364,10 +373,10 @@ arrange.DataFrame <- function(.data, ...) {
   if (length(groupvars) > 0L) {
     groups <- group_data(.data)
     split_data <- lapply(seq_len(nrow(groups)), function(x) {
-      .data_grp <- .data[groups$.rows[x][[1]], , drop = FALSE]
+      .data_grp <- ungroup(.data)[groups$.rows[x][[1]], , drop = FALSE]
       .data_grp[with(.data_grp, do.call(order, EXPRS)), ]
     })
-    do.call(rbind, split_data)
+    group_by(do.call(rbind, split_data), !!!groupvars)
   } else {
     .data[with(.data, do.call(order, EXPRS)), ]
   }
@@ -578,5 +587,8 @@ setMethod("[", "DataFrame", .grp_subset)
   group_by(ungroup(combined), !!!group_vars(x))
 }
 
+#' rbind DataFrames
+#' @param x a DataFrame
+#' @param objects a list of DataFrames
 #' @export
 setMethod("bindROWS", "DataFrame", .grp_bindROWS)
