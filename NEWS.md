@@ -3,6 +3,7 @@
 NEW FEATURES
 
 * `[` and `rbind` methods now respect groups
+* Added `left_join()`, `right_join()`, `inner_join()`, and `full_join()`
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
