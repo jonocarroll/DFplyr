@@ -52,4 +52,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Jonathan Carroll \email{rpkg@jcarroll.com.au} (\href{https://orcid.org/0000-0002-1404-5264}{ORCID})
 
+Other contributors:
+\itemize{
+  \item Pierre-Paul Axisa [contributor]
+}
+
 }

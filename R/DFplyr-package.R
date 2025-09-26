@@ -9,6 +9,7 @@
 #' @importFrom dplyr count group_by_drop_default summarise summarize
 #' @importFrom dplyr group_data group_vars group_by ungroup
 #' @importFrom dplyr distinct pull slice tally
+#' @importFrom dplyr left_join right_join inner_join full_join
 #' @import S4Vectors
 #'
 #' @md

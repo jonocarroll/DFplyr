@@ -48,7 +48,7 @@ BiocManager::install("DFplyr")
 First create an S4Vectors `DataFrame`, including S4 columns if desired
 
 ```{r}
-library(S4Vectors)
+suppressMessages(library(S4Vectors))
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
 d <- as(m, "DataFrame")
 d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width = 10))
@@ -72,7 +72,7 @@ have appropriate functions. Adding multiple columns will result in the new
 columns being created in alphabetical order
 
 ```{r}
-library(DFplyr)
+suppressMessages(library(DFplyr))
 
 mutate(d, newvar = cyl + hp)
 
@@ -159,8 +159,30 @@ group_by(d, cyl, am) %>%
 count(d, gear, am, cyl)
 ```
 
+## Joins
+
+Joins attempt to preserve rownames and grouping wherever possible
+
+```{r}
+Da <- as(starwars[, c("name", "eye_color", "height", "mass")], "DataFrame") |> 
+  head(10) |> 
+  group_by(eye_color)
+Da
+
+Db <- as(starwars[, c("name", "eye_color", "homeworld")], "DataFrame")
+Db
+
+left_join(Da, Db)
+
+right_join(Da, Db)
+
+inner_join(Da, Db[1:3, ])
+
+full_join(Da, Db[1:3, ])
+```
+
 ## Coverage
 
-Most `dplyr` functions are implemented with the exception of `join`s. 
+Most `dplyr` functions are implemented.
 
 If you find any which are not, please [file an issue](https://github.com/jonocarroll/DFplyr/issues/new).

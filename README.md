@@ -4,6 +4,7 @@
 # DFplyr
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The goal of DFplyr is to enable `dplyr` and `ggplot2` support for
@@ -38,30 +39,7 @@ BiocManager::install("DFplyr")
 First create an S4Vectors `DataFrame`, including S4 columns if desired
 
 ``` r
-library(S4Vectors)
-#> Loading required package: stats4
-#> Loading required package: BiocGenerics
-#> 
-#> Attaching package: 'BiocGenerics'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     IQR, mad, sd, var, xtabs
-#> The following objects are masked from 'package:base':
-#> 
-#>     anyDuplicated, aperm, append, as.data.frame, basename, cbind,
-#>     colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
-#>     get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
-#>     match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
-#>     Position, rank, rbind, Reduce, rownames, sapply, setdiff, sort,
-#>     table, tapply, union, unique, unsplit, which.max, which.min
-#> 
-#> Attaching package: 'S4Vectors'
-#> The following object is masked from 'package:utils':
-#> 
-#>     findMatches
-#> The following objects are masked from 'package:base':
-#> 
-#>     expand.grid, I, unname
+suppressMessages(library(S4Vectors))
 m <- mtcars[, c("cyl", "hp", "am", "gear", "disp")]
 d <- as(m, "DataFrame")
 d$grX <- GenomicRanges::GRanges("chrX", IRanges::IRanges(1:32, width = 10))
@@ -84,17 +62,17 @@ d
 #> Volvo 142E                4       109         1         4     121.0 chrX:32-41
 #>                          grY                    nl
 #>                    <GRanges>         <NumericList>
-#> Mazda RX4          chrY:1-10 -0.65, 0.90,-0.84,...
-#> Mazda RX4 Wag      chrY:2-11  0.67,-0.17, 0.23,...
-#> Datsun 710         chrY:3-12 -0.91,-0.69, 0.73,...
-#> Hornet 4 Drive     chrY:4-13      0.65,-0.30, 0.98
-#> Hornet Sportabout  chrY:5-14     -0.87,-0.81,-0.42
+#> Mazda RX4          chrY:1-10 -1.30, 0.23, 2.60,...
+#> Mazda RX4 Wag      chrY:2-11 -0.22,-0.17,-0.23,...
+#> Datsun 710         chrY:3-12 -0.03,-0.74,-0.93,...
+#> Hornet 4 Drive     chrY:4-13     -0.87,-2.53,-0.26
+#> Hornet Sportabout  chrY:5-14     -0.48,-2.95,-0.17
 #> ...                      ...                   ...
-#> Lotus Europa      chrY:28-37    0.66,0.83,1.76,...
-#> Ford Pantera L    chrY:29-38 -0.19,-0.83, 1.08,...
-#> Ferrari Dino      chrY:30-39 -0.47, 1.73,-0.08,...
-#> Maserati Bora     chrY:31-40    2.07,1.65,0.51,...
-#> Volvo 142E        chrY:32-41  0.82,-0.38,-0.86,...
+#> Lotus Europa      chrY:28-37 -0.80,-1.10,-0.41,...
+#> Ford Pantera L    chrY:29-38 -0.61,-1.41, 1.43,...
+#> Ferrari Dino      chrY:30-39  0.24, 0.49,-0.11,...
+#> Maserati Bora     chrY:31-40 -0.56,-0.91,-1.02,...
+#> Volvo 142E        chrY:32-41  1.86,-1.82,-1.15,...
 ```
 
 This will appear in RStudio’s environment pane as a
@@ -110,27 +88,7 @@ provided they have appropriate functions. Adding multiple columns will
 result in the new columns being created in alphabetical order
 
 ``` r
-library(DFplyr)
-#> Loading required package: dplyr
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:S4Vectors':
-#> 
-#>     first, intersect, rename, setdiff, setequal, union
-#> The following objects are masked from 'package:BiocGenerics':
-#> 
-#>     combine, intersect, setdiff, union
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-#> 
-#> Attaching package: 'DFplyr'
-#> The following object is masked from 'package:dplyr':
-#> 
-#>     desc
+suppressMessages(library(DFplyr))
 
 mutate(d, newvar = cyl + hp)
 #> DataFrame with 32 rows and 9 columns
@@ -149,17 +107,17 @@ mutate(d, newvar = cyl + hp)
 #> Volvo 142E                4       109         1         4     121.0 chrX:32-41
 #>                          grY                      nl    newvar
 #>                    <GRanges> <CompressedNumericList> <numeric>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...       116
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...       116
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...        97
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98       116
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42       183
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...       116
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...       116
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...        97
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26       116
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17       183
 #> ...                      ...                     ...       ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...       117
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...       272
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...       181
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...       343
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...       113
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...       117
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...       272
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...       181
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...       343
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...       113
 
 mutate(d, nl2 = nl * 2)
 #> DataFrame with 32 rows and 9 columns
@@ -178,17 +136,17 @@ mutate(d, nl2 = nl * 2)
 #> Volvo 142E                4       109         1         4     121.0 chrX:32-41
 #>                          grY                      nl                     nl2
 #>                    <GRanges> <CompressedNumericList> <CompressedNumericList>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...   -1.30, 1.80,-1.68,...
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...    1.34,-0.34, 0.46,...
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...   -1.82,-1.38, 1.46,...
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98        1.30,-0.60, 1.96
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42       -1.74,-1.62,-0.84
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...   -2.60, 0.46, 5.20,...
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...   -0.44,-0.34,-0.46,...
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...   -0.06,-1.48,-1.86,...
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26       -1.74,-5.06,-0.52
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17       -0.96,-5.90,-0.34
 #> ...                      ...                     ...                     ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...      1.32,1.66,3.52,...
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...   -0.38,-1.66, 2.16,...
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...   -0.94, 3.46,-0.16,...
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...      4.14,3.30,1.02,...
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...    1.64,-0.76,-1.72,...
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...   -1.60,-2.20,-0.82,...
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...   -1.22,-2.82, 2.86,...
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...    0.48, 0.98,-0.22,...
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...   -1.12,-1.82,-2.04,...
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...    3.72,-3.64,-2.30,...
 
 mutate(d, length_nl = lengths(nl))
 #> DataFrame with 32 rows and 9 columns
@@ -207,17 +165,17 @@ mutate(d, length_nl = lengths(nl))
 #> Volvo 142E                4       109         1         4     121.0 chrX:32-41
 #>                          grY                      nl length_nl
 #>                    <GRanges> <CompressedNumericList> <integer>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...         4
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...         4
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...         4
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98         3
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42         3
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...         4
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...         4
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...         4
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26         3
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17         3
 #> ...                      ...                     ...       ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...         5
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...         5
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...         5
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...         5
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...         4
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...         5
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...         5
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...         5
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...         5
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...         4
 
 mutate(d,
     chr = GenomeInfoDb::seqnames(grX),
@@ -240,17 +198,17 @@ mutate(d,
 #> Volvo 142E                4       109         1         4     121.0 chrX:32-41
 #>                          grY                      nl   chr     end_X strand_X
 #>                    <GRanges> <CompressedNumericList> <Rle> <integer>    <Rle>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...  chrX        10        *
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...  chrX        11        *
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...  chrX        12        *
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98  chrX        13        *
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42  chrX        14        *
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...  chrX        10        *
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...  chrX        11        *
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...  chrX        12        *
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26  chrX        13        *
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17  chrX        14        *
 #> ...                      ...                     ...   ...       ...      ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...  chrX        37        *
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...  chrX        38        *
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...  chrX        39        *
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...  chrX        40        *
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...  chrX        41        *
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...  chrX        37        *
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...  chrX        38        *
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...  chrX        39        *
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...  chrX        40        *
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...  chrX        41        *
 ```
 
 the object returned remains a standard `DataFrame`, and further calls
@@ -283,17 +241,17 @@ mutate_if(d, is.numeric, ~ .^2)
 #> Volvo 142E               16     11881         1        16  14641.00 chrX:32-41
 #>                          grY                      nl
 #>                    <GRanges> <CompressedNumericList>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17
 #> ...                      ...                     ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...
 
 mutate_if(d, ~ inherits(., "GRanges"), BiocGenerics::start)
 #> DataFrame with 32 rows and 8 columns
@@ -312,17 +270,17 @@ mutate_if(d, ~ inherits(., "GRanges"), BiocGenerics::start)
 #> Volvo 142E                4       109         1         4     121.0        32
 #>                         grY                      nl
 #>                   <integer> <CompressedNumericList>
-#> Mazda RX4                 1   -0.65, 0.90,-0.84,...
-#> Mazda RX4 Wag             2    0.67,-0.17, 0.23,...
-#> Datsun 710                3   -0.91,-0.69, 0.73,...
-#> Hornet 4 Drive            4        0.65,-0.30, 0.98
-#> Hornet Sportabout         5       -0.87,-0.81,-0.42
+#> Mazda RX4                 1   -1.30, 0.23, 2.60,...
+#> Mazda RX4 Wag             2   -0.22,-0.17,-0.23,...
+#> Datsun 710                3   -0.03,-0.74,-0.93,...
+#> Hornet 4 Drive            4       -0.87,-2.53,-0.26
+#> Hornet Sportabout         5       -0.48,-2.95,-0.17
 #> ...                     ...                     ...
-#> Lotus Europa             28      0.66,0.83,1.76,...
-#> Ford Pantera L           29   -0.19,-0.83, 1.08,...
-#> Ferrari Dino             30   -0.47, 1.73,-0.08,...
-#> Maserati Bora            31      2.07,1.65,0.51,...
-#> Volvo 142E               32    0.82,-0.38,-0.86,...
+#> Lotus Europa             28   -0.80,-1.10,-0.41,...
+#> Ford Pantera L           29   -0.61,-1.41, 1.43,...
+#> Ferrari Dino             30    0.24, 0.49,-0.11,...
+#> Maserati Bora            31   -0.56,-0.91,-1.02,...
+#> Volvo 142E               32    1.86,-1.82,-1.15,...
 ```
 
 Use of `tidyselect` helpers is limited to within `dplyr::vars()` calls
@@ -346,17 +304,17 @@ mutate_at(d, vars(starts_with("c")), ~ .^2)
 #> Volvo 142E               16       109         1         4     121.0 chrX:32-41
 #>                          grY                      nl
 #>                    <GRanges> <CompressedNumericList>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17
 #> ...                      ...                     ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...
 
 select_at(d, vars(starts_with("gr")))
 #> DataFrame with 32 rows and 2 columns
@@ -398,17 +356,17 @@ group_by(d, cyl, am)
 #> Volvo 142E                4       109         1         4     121.0 chrX:32-41
 #>                          grY                      nl
 #>                    <GRanges> <CompressedNumericList>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17
 #> ...                      ...                     ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...
 ```
 
 Other verbs are similarly implemented, and preserve row names where
@@ -448,17 +406,17 @@ arrange(d, desc(hp))
 #> Honda Civic               4        52         1         4      75.7 chrX:19-28
 #>                          grY                      nl
 #>                    <GRanges> <CompressedNumericList>
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...
-#> Duster 360         chrY:7-16       -0.39,-1.09,-0.02
-#> Camaro Z28        chrY:24-33       -1.51,-0.63, 0.30
-#> Chrysler Imperial chrY:17-26        0.31, 1.26,-1.22
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...
+#> Duster 360         chrY:7-16        0.67,-0.97,-0.76
+#> Camaro Z28        chrY:24-33       -0.87, 1.31,-1.45
+#> Chrysler Imperial chrY:17-26        0.38, 1.22,-1.25
 #> ...                      ...                     ...
-#> Fiat 128          chrY:18-27   -1.15,-0.88,-0.39,...
-#> Fiat X1-9         chrY:26-35   -0.35, 1.52, 0.36,...
-#> Toyota Corolla    chrY:20-29    1.26,-0.56, 0.41,...
-#> Merc 240D          chrY:8-17    0.76,-0.50,-0.68,...
-#> Honda Civic       chrY:19-28    0.94, 1.07,-1.33,...
+#> Fiat 128          chrY:18-27    1.58,-0.43,-0.97,...
+#> Fiat X1-9         chrY:26-35   -1.60,-0.76, 0.39,...
+#> Toyota Corolla    chrY:20-29    0.84,-1.32, 2.19,...
+#> Merc 240D          chrY:8-17   -0.64, 0.53, 0.49,...
+#> Honda Civic       chrY:19-28      0.38,0.24,0.01,...
 
 filter(d, am == 0)
 #> DataFrame with 19 rows and 8 columns
@@ -477,17 +435,17 @@ filter(d, am == 0)
 #> Pontiac Firebird          8       175         0         3     400.0 chrX:25-34
 #>                          grY                      nl
 #>                    <GRanges> <CompressedNumericList>
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42
-#> Valiant            chrY:6-15        1.12, 0.21,-0.26
-#> Duster 360         chrY:7-16       -0.39,-1.09,-0.02
-#> Merc 240D          chrY:8-17    0.76,-0.50,-0.68,...
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17
+#> Valiant            chrY:6-15       -0.97, 0.10, 0.76
+#> Duster 360         chrY:7-16        0.67,-0.97,-0.76
+#> Merc 240D          chrY:8-17   -0.64, 0.53, 0.49,...
 #> ...                      ...                     ...
-#> Toyota Corona     chrY:21-30        1.65,-1.04,-1.22
-#> Dodge Challenger  chrY:22-31       -0.66,-0.76, 0.39
-#> AMC Javelin       chrY:23-32       -0.61,-0.52, 1.71
-#> Camaro Z28        chrY:24-33       -1.51,-0.63, 0.30
-#> Pontiac Firebird  chrY:25-34       -0.67, 0.35, 0.29
+#> Toyota Corona     chrY:21-30          1.74,0.63,0.03
+#> Dodge Challenger  chrY:22-31       -1.39, 0.51,-0.90
+#> AMC Javelin       chrY:23-32        0.37,-0.96, 1.56
+#> Camaro Z28        chrY:24-33       -0.87, 1.31,-1.45
+#> Pontiac Firebird  chrY:25-34          1.23,1.43,0.95
 
 slice(d, 3:6)
 #> DataFrame with 4 rows and 8 columns
@@ -499,15 +457,14 @@ slice(d, 3:6)
 #> Valiant                   6       105         0         3       225 chrX:6-15
 #>                         grY                      nl
 #>                   <GRanges> <CompressedNumericList>
-#> Datsun 710        chrY:3-12   -0.91,-0.69, 0.73,...
-#> Hornet 4 Drive    chrY:4-13        0.65,-0.30, 0.98
-#> Hornet Sportabout chrY:5-14       -0.87,-0.81,-0.42
-#> Valiant           chrY:6-15        1.12, 0.21,-0.26
+#> Datsun 710        chrY:3-12   -0.03,-0.74,-0.93,...
+#> Hornet 4 Drive    chrY:4-13       -0.87,-2.53,-0.26
+#> Hornet Sportabout chrY:5-14       -0.48,-2.95,-0.17
+#> Valiant           chrY:6-15       -0.97, 0.10, 0.76
 
 group_by(d, gear) %>%
     slice(1:2)
 #> DataFrame with 6 rows and 8 columns
-#> Groups:  gear 
 #>                         cyl        hp        am      gear      disp        grX
 #>                   <numeric> <numeric> <numeric> <numeric> <numeric>  <GRanges>
 #> Hornet Sportabout         8       175         0         3     360.0  chrX:5-14
@@ -518,12 +475,12 @@ group_by(d, gear) %>%
 #> Ford Pantera L            8       264         1         5     351.0 chrX:29-38
 #>                          grY                      nl
 #>                    <GRanges> <CompressedNumericList>
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42
-#> Merc 450SL        chrY:13-22          0.43,1.46,0.13
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...
-#> Porsche 914-2     chrY:27-36    0.28, 0.94,-0.14,...
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17
+#> Merc 450SL        chrY:13-22          0.63,1.48,0.55
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...
+#> Porsche 914-2     chrY:27-36    0.47,-1.47, 0.25,...
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...
 ```
 
 `rename` is itself renamed to `rename2` due to conflicts between {dplyr}
@@ -533,20 +490,8 @@ replacements with NSE syntax
 ``` r
 select(d, am, cyl) %>%
     rename2(foo = am)
-#> DataFrame with 32 rows and 2 columns
-#>                         foo       cyl
-#>                   <numeric> <numeric>
-#> Mazda RX4                 1         6
-#> Mazda RX4 Wag             1         6
-#> Datsun 710                1         4
-#> Hornet 4 Drive            0         6
-#> Hornet Sportabout         0         8
-#> ...                     ...       ...
-#> Lotus Europa              1         4
-#> Ford Pantera L            1         8
-#> Ferrari Dino              1         6
-#> Maserati Bora             1         8
-#> Volvo 142E                1         4
+#> Warning in rename2(., foo = am): DFplyr now properly supports rename with NSE
+#> syntax
 ```
 
 Row names are not preserved when there may be duplicates or they don’t
@@ -572,17 +517,17 @@ distinct(d)
 #> Volvo 142E                4       109         1         4     121.0 chrX:32-41
 #>                          grY                      nl
 #>                    <GRanges> <CompressedNumericList>
-#> Mazda RX4          chrY:1-10   -0.65, 0.90,-0.84,...
-#> Mazda RX4 Wag      chrY:2-11    0.67,-0.17, 0.23,...
-#> Datsun 710         chrY:3-12   -0.91,-0.69, 0.73,...
-#> Hornet 4 Drive     chrY:4-13        0.65,-0.30, 0.98
-#> Hornet Sportabout  chrY:5-14       -0.87,-0.81,-0.42
+#> Mazda RX4          chrY:1-10   -1.30, 0.23, 2.60,...
+#> Mazda RX4 Wag      chrY:2-11   -0.22,-0.17,-0.23,...
+#> Datsun 710         chrY:3-12   -0.03,-0.74,-0.93,...
+#> Hornet 4 Drive     chrY:4-13       -0.87,-2.53,-0.26
+#> Hornet Sportabout  chrY:5-14       -0.48,-2.95,-0.17
 #> ...                      ...                     ...
-#> Lotus Europa      chrY:28-37      0.66,0.83,1.76,...
-#> Ford Pantera L    chrY:29-38   -0.19,-0.83, 1.08,...
-#> Ferrari Dino      chrY:30-39   -0.47, 1.73,-0.08,...
-#> Maserati Bora     chrY:31-40      2.07,1.65,0.51,...
-#> Volvo 142E        chrY:32-41    0.82,-0.38,-0.86,...
+#> Lotus Europa      chrY:28-37   -0.80,-1.10,-0.41,...
+#> Ford Pantera L    chrY:29-38   -0.61,-1.41, 1.43,...
+#> Ferrari Dino      chrY:30-39    0.24, 0.49,-0.11,...
+#> Maserati Bora     chrY:31-40   -0.56,-0.91,-1.02,...
+#> Volvo 142E        chrY:32-41    1.86,-1.82,-1.15,...
 
 group_by(d, cyl, am) %>%
     tally(gear)
@@ -612,9 +557,113 @@ count(d, gear, am, cyl)
 #> 10        5     1     8         2
 ```
 
+## Joins
+
+Joins attempt to preserve rownames and grouping wherever possible
+
+``` r
+Da <- as(starwars[, c("name", "eye_color", "height", "mass")], "DataFrame") |> 
+  head(10) |> 
+  group_by(eye_color)
+Da
+#> DataFrame with 10 rows and 4 columns
+#> Groups:  eye_color 
+#>                  name   eye_color    height      mass
+#>           <character> <character> <integer> <numeric>
+#> 1      Luke Skywalker        blue       172        77
+#> 2               C-3PO      yellow       167        75
+#> 3               R2-D2         red        96        32
+#> 4         Darth Vader      yellow       202       136
+#> 5         Leia Organa       brown       150        49
+#> 6           Owen Lars        blue       178       120
+#> 7  Beru Whitesun Lars        blue       165        75
+#> 8               R5-D4         red        97        32
+#> 9   Biggs Darklighter       brown       183        84
+#> 10     Obi-Wan Kenobi   blue-gray       182        77
+
+Db <- as(starwars[, c("name", "eye_color", "homeworld")], "DataFrame")
+Db
+#> DataFrame with 87 rows and 3 columns
+#>               name   eye_color   homeworld
+#>        <character> <character> <character>
+#> 1   Luke Skywalker        blue    Tatooine
+#> 2            C-3PO      yellow    Tatooine
+#> 3            R2-D2         red       Naboo
+#> 4      Darth Vader      yellow    Tatooine
+#> 5      Leia Organa       brown    Alderaan
+#> ...            ...         ...         ...
+#> 83            Finn        dark          NA
+#> 84             Rey       hazel          NA
+#> 85     Poe Dameron       brown          NA
+#> 86             BB8       black          NA
+#> 87  Captain Phasma     unknown          NA
+
+left_join(Da, Db)
+#> Joining with `by = c("name", "eye_color")`
+#> DataFrame with 10 rows and 5 columns
+#> Groups:  eye_color 
+#>                  name   eye_color    height      mass   homeworld
+#>           <character> <character> <integer> <numeric> <character>
+#> 1      Luke Skywalker        blue       172        77    Tatooine
+#> 2               C-3PO      yellow       167        75    Tatooine
+#> 3               R2-D2         red        96        32       Naboo
+#> 4         Darth Vader      yellow       202       136    Tatooine
+#> 5         Leia Organa       brown       150        49    Alderaan
+#> 6           Owen Lars        blue       178       120    Tatooine
+#> 7  Beru Whitesun Lars        blue       165        75    Tatooine
+#> 8               R5-D4         red        97        32    Tatooine
+#> 9   Biggs Darklighter       brown       183        84    Tatooine
+#> 10     Obi-Wan Kenobi   blue-gray       182        77     Stewjon
+
+right_join(Da, Db)
+#> Joining with `by = c("name", "eye_color")`
+#> DataFrame with 87 rows and 5 columns
+#> Groups:  eye_color 
+#>               name     eye_color    height      mass   homeworld
+#>        <character>   <character> <integer> <numeric> <character>
+#> 1   Luke Skywalker          blue       172        77    Tatooine
+#> 2            C-3PO        yellow       167        75    Tatooine
+#> 3            R2-D2           red        96        32       Naboo
+#> 4      Darth Vader        yellow       202       136    Tatooine
+#> 5      Leia Organa         brown       150        49    Alderaan
+#> ...            ...           ...       ...       ...         ...
+#> 83             BB8         black        NA        NA          NA
+#> 84  Captain Phasma       unknown        NA        NA          NA
+#> 85        San Hill          gold        NA        NA  Muunilinst
+#> 86        Shaak Ti         black        NA        NA       Shili
+#> 87        Grievous green, yellow        NA        NA       Kalee
+
+inner_join(Da, Db[1:3, ])
+#> Joining with `by = c("name", "eye_color")`
+#> DataFrame with 3 rows and 5 columns
+#> Groups:  eye_color 
+#>             name   eye_color    height      mass   homeworld
+#>      <character> <character> <integer> <numeric> <character>
+#> 1 Luke Skywalker        blue       172        77    Tatooine
+#> 2          C-3PO      yellow       167        75    Tatooine
+#> 3          R2-D2         red        96        32       Naboo
+
+full_join(Da, Db[1:3, ])
+#> Joining with `by = c("name", "eye_color")`
+#> DataFrame with 10 rows and 5 columns
+#> Groups:  eye_color 
+#>                  name   eye_color    height      mass   homeworld
+#>           <character> <character> <integer> <numeric> <character>
+#> 1      Luke Skywalker        blue       172        77    Tatooine
+#> 2               C-3PO      yellow       167        75    Tatooine
+#> 3               R2-D2         red        96        32       Naboo
+#> 4         Leia Organa       brown       150        49          NA
+#> 5           Owen Lars        blue       178       120          NA
+#> 6  Beru Whitesun Lars        blue       165        75          NA
+#> 7         Darth Vader      yellow       202       136          NA
+#> 8   Biggs Darklighter       brown       183        84          NA
+#> 9      Obi-Wan Kenobi   blue-gray       182        77          NA
+#> 10              R5-D4         red        97        32          NA
+```
+
 ## Coverage
 
-Most `dplyr` functions are implemented with the exception of `join`s.
+Most `dplyr` functions are implemented.
 
 If you find any which are not, please [file an
 issue](https://github.com/jonocarroll/DFplyr/issues/new).

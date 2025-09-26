@@ -1,4 +1,15 @@
-# DFplyr 0.0.3
+# DFplyr 1.3.0
+
+NEW FEATURES
+
+* `[` and `rbind` methods now respect groups
+* Added `left_join()`, `right_join()`, `inner_join()`, and `full_join()`
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+* `rename2` deprecated; `rename` is now a `DataFrame` method on `S4Vectors` generic
+
+# DFplyr 0.0.3 / 1.2.0
 
 NEW FEATURES
 
