@@ -1,40 +1,45 @@
 check_common_columns <- function(names_x, names_y) {
-  by <- intersect(names_x, names_y)
+    by <- intersect(names_x, names_y)
 
-  # from dplyr:::join_by_common
-  if (length(by) == 0)
-    rlang::abort(
-      "`by` must be supplied when `x` and `y` have no common variables."
-    )
+    # from dplyr:::join_by_common
+    if (length(by) == 0) {
+        rlang::abort(
+            "`by` must be supplied when `x` and `y` have no common variables."
+        )
+    }
 
-  message("Joining with `by = ", deparse(by), "`")
+    message("Joining with `by = ", deparse(by), "`")
 
-  return(by)
+    return(by)
 }
 
 is_leftish <- function(...) {
-  # does this look like a non-right join?
-  args <- list(...)
-  if (utils::hasName(args, "all.y") && args$all.y) return(FALSE)
-  TRUE
+    # does this look like a non-right join?
+    args <- list(...)
+    if (utils::hasName(args, "all.y") && args$all.y) {
+        return(FALSE)
+    }
+    TRUE
 }
 
 join_internal <- function(x, y, by = NULL, ...) {
-  use_rownames <- is_leftish(...)
-  if (use_rownames) x$...rownames <- rownames(x)
-  if (is.null(by)) by <- check_common_columns(names(x), names(y))
+    use_rownames <- is_leftish(...)
+    if (use_rownames) x$...rownames <- rownames(x)
+    if (is.null(by)) by <- check_common_columns(names(x), names(y))
 
-  grps <- group_vars(x)
+    grps <- group_vars(x)
 
-  x <- S4Vectors::merge(x, y, by = by, sort = FALSE, ...)
-  if (use_rownames) rownames(x) <- x$...rownames
-  if (use_rownames) x$...rownames <- NULL
+    x <- S4Vectors::merge(x, y, by = by, sort = FALSE, ...)
+    if (use_rownames) rownames(x) <- x$...rownames
+    if (use_rownames) x$...rownames <- NULL
 
-  grps <- intersect(grps, colnames(x)) # <-- preserve remaining groups
-  # if no grouping return object
-  if (length(grps) == 0) return(x)
-  # else rebuild groups with new DF
-  group_by(x, !!!rlang::syms(grps))
+    grps <- intersect(grps, colnames(x)) # <-- preserve remaining groups
+    # if no grouping return object
+    if (length(grps) == 0) {
+        return(x)
+    }
+    # else rebuild groups with new DF
+    group_by(x, !!!rlang::syms(grps))
 }
 
 
@@ -59,47 +64,51 @@ join_internal <- function(x, y, by = NULL, ...) {
 #' @export
 #' @keywords internal
 inner_join.DataFrame <- function(
-  x,
-  y,
-  by = NULL,
-  copy = FALSE,
-  suffix = c(".x", ".y"),
-  ...,
-  keep = NULL
-) join_internal(x = x, y = y, by = by, all = FALSE)
+        x,
+        y,
+        by = NULL,
+        copy = FALSE,
+        suffix = c(".x", ".y"),
+        ...,
+        keep = NULL) {
+    join_internal(x = x, y = y, by = by, all = FALSE)
+}
 
 #' @export
 #' @keywords internal
 left_join.DataFrame <- function(
-  x,
-  y,
-  by = NULL,
-  copy = FALSE,
-  suffix = c(".x", ".y"),
-  ...,
-  keep = NULL
-) join_internal(x = x, y = y, by = by, all.x = TRUE)
+        x,
+        y,
+        by = NULL,
+        copy = FALSE,
+        suffix = c(".x", ".y"),
+        ...,
+        keep = NULL) {
+    join_internal(x = x, y = y, by = by, all.x = TRUE)
+}
 
 #' @export
 #' @keywords internal
 right_join.DataFrame <- function(
-  x,
-  y,
-  by = NULL,
-  copy = FALSE,
-  suffix = c(".x", ".y"),
-  ...,
-  keep = NULL
-) join_internal(x = x, y = y, by = by, all.y = TRUE)
+        x,
+        y,
+        by = NULL,
+        copy = FALSE,
+        suffix = c(".x", ".y"),
+        ...,
+        keep = NULL) {
+    join_internal(x = x, y = y, by = by, all.y = TRUE)
+}
 
 #' @export
 #' @keywords internal
 full_join.DataFrame <- function(
-  x,
-  y,
-  by = NULL,
-  copy = FALSE,
-  suffix = c(".x", ".y"),
-  ...,
-  keep = NULL
-) join_internal(x = x, y = y, by = by, all = TRUE)
+        x,
+        y,
+        by = NULL,
+        copy = FALSE,
+        suffix = c(".x", ".y"),
+        ...,
+        keep = NULL) {
+    join_internal(x = x, y = y, by = by, all = TRUE)
+}

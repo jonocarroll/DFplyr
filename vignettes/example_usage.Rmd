@@ -240,9 +240,9 @@ count(d, gear, am, cyl)
 Joins attempt to preserve rownames and grouping wherever possible
 
 ```{r}
-Da <- as(starwars[, c("name", "eye_color", "height", "mass")], "DataFrame") |> 
-  head(10) |> 
-  group_by(eye_color)
+Da <- as(starwars[, c("name", "eye_color", "height", "mass")], "DataFrame") |>
+    head(10) |>
+    group_by(eye_color)
 Da
 
 Db <- as(starwars[, c("name", "eye_color", "homeworld")], "DataFrame")
