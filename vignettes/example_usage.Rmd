@@ -237,6 +237,26 @@ or a count with weights
 count(d, gear, am, cyl)
 ```
 
+Joins attempt to preserve rownames and grouping wherever possible
+
+```{r}
+Da <- as(starwars[, c("name", "eye_color", "height", "mass")], "DataFrame") |> 
+  head(10) |> 
+  group_by(eye_color)
+Da
+
+Db <- as(starwars[, c("name", "eye_color", "homeworld")], "DataFrame")
+Db
+
+left_join(Da, Db)
+
+right_join(Da, Db)
+
+inner_join(Da, Db[1:3, ])
+
+full_join(Da, Db[1:3, ])
+```
+
 ## Citing `DFplyr`
 
 We hope that `r Biocpkg("DFplyr")` will be useful for your research. Please use
