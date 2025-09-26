@@ -1,10 +1,11 @@
 Package: DFplyr
 Title: A `DataFrame` (`S4Vectors`) backend for `dplyr`
 Version: 0.99.2
-Authors@R: person("Jonathan", "Carroll", 
+Authors@R: c(person("Jonathan", "Carroll", 
     email = "rpkg@jcarroll.com.au", 
     role = c("aut", "cre"), 
-    comment = c(ORCID = "0000-0002-1404-5264"))
+    comment = c(ORCID = "0000-0002-1404-5264")),
+    person("Pierre-Paul", "Axisa", role=c("ctb")))
 Description: Provides `dplyr` verbs (`mutate`, `select`, `filter`, etc...) 
     supporting `S4Vectors::DataFrame` objects. Importantly, this is achieved 
     without conversion to an intermediate `tibble`. Adds grouping 
