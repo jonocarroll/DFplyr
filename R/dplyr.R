@@ -129,7 +129,7 @@ select.DataFrame <- function(.data, ...) {
 
 #' @importFrom rlang quos quo_squash set_names
 #' @importFrom S4Vectors rename
-#'
+#' @keywords internal
 .rename <- function(x, ...) {
     FNS <- lapply(rlang::quos(...), rlang::quo_squash)
     methods::getMethod(
@@ -140,14 +140,16 @@ select.DataFrame <- function(.data, ...) {
 }
 
 #' Rename Columns of a DataFrame
-#' @param x a DataFrame
+#' @param x a `DataFrame`
 #' @param ... NSE syntax; `new_name = old_name` to rename selected variables
+#' @return a `DataFrame` with columns renamed
 #' @export
 setMethod("rename", "DataFrame", .rename)
 
 #' Rename Columns of a DataFrame (deprecated)
 #' @param .data a DataFrame
 #' @param ... columns to be renamed with syntax `new = old`
+#' @return Deprecated - use `rename`
 #' @export
 rename2 <- function(.data, ...) {
     .Deprecated(
@@ -289,18 +291,19 @@ group_vars.DataFrame <- function(x) {
 #' @inherit dplyr::group_by
 #' @importFrom rlang quos quo_squash as_string syms
 #' @export
-group_by.DataFrame <- function(
-        .data,
-        ...,
-        add = FALSE,
-        .drop = group_by_drop_default(.data)) {
+group_by.DataFrame <- function(.data,
+    ...,
+    add = FALSE,
+    .drop = group_by_drop_default(.data)) {
     if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
         groupvars <- lapply(
             rlang::quos(...),
             function(x) rlang::as_string(rlang::quo_squash(x))
         )
         for (v in groupvars) {
-            if (!utils::hasName(.data, v)) stop("Column '", v, "' not found in data")
+            if (!utils::hasName(.data, v)) {
+                stop("Column '", v, "' not found in data")
+            }
         }
         uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
         flagged <- S4Vectors::merge(
@@ -578,6 +581,7 @@ group_intersect <- function(x, new) {
 #' @param j columns to subset
 #' @param ... other params, passed to regular `S4Vectors` subsetting
 #' @param drop drop dimensions?
+#' @return a `DataFrame` subset by rows and/or columns
 #' @export
 setMethod("[", "DataFrame", .grp_subset)
 
@@ -597,7 +601,8 @@ setMethod("[", "DataFrame", .grp_subset)
 }
 
 #' rbind DataFrames
-#' @param x a DataFrame
+#' @param x a `DataFrame`
 #' @param objects a list of DataFrames
+#' @return a new `DataFrame` combining the inputs by rows
 #' @export
 setMethod("bindROWS", "DataFrame", .grp_bindROWS)

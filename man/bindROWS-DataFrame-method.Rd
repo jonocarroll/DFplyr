@@ -7,9 +7,12 @@
 \S4method{bindROWS}{DataFrame}(x, objects = list())
 }
 \arguments{
-\item{x}{a DataFrame}
+\item{x}{a \code{DataFrame}}
 
 \item{objects}{a list of DataFrames}
+}
+\value{
+a new \code{DataFrame} combining the inputs by rows
 }
 \description{
 rbind DataFrames

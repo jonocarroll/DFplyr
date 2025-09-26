@@ -7,9 +7,12 @@
 \S4method{rename}{DataFrame}(x, ...)
 }
 \arguments{
-\item{x}{a DataFrame}
+\item{x}{a \code{DataFrame}}
 
 \item{...}{NSE syntax; \code{new_name = old_name} to rename selected variables}
+}
+\value{
+a \code{DataFrame} with columns renamed
 }
 \description{
 Rename Columns of a DataFrame

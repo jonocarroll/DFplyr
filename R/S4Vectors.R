@@ -5,13 +5,9 @@
     x_ncol <- ncol(object)
     cat(
         S4Vectors::classNameForDisplay(object),
-        " with ",
-        x_nrow,
-        " row",
+        " with ", x_nrow, " row",
         ifelse(x_nrow == 1L, "", "s"),
-        " and ",
-        x_ncol,
-        " column",
+        " and ", x_ncol, " column",
         ifelse(x_ncol == 1L, "", "s"),
         "\n",
         sep = ""
@@ -108,7 +104,12 @@ setMethod("show", "DataFrame", .show_DF)
                 elt_nrows <- S4Vectors::elementNROWS(listData)
                 nrows <- elt_nrows[[1L]]
                 if (!all(elt_nrows == nrows)) {
-                    stop(S4Vectors::wmsg(what, " imply differing number of rows"))
+                    stop(
+                        S4Vectors::wmsg(
+                            what,
+                            " imply differing number of rows"
+                        )
+                    )
                 }
             }
             if (is.null(names(listData))) {

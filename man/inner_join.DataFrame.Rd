@@ -19,7 +19,8 @@
 
 \item{y}{a \code{DataFrame} or \code{data.frame}}
 
-\item{by}{columns to use for joining the objects. If \code{NULL}, the function will look for common columns.}
+\item{by}{columns to use for joining the objects. If \code{NULL}, the function
+will look for common columns.}
 }
 \value{
 a \code{DataFrame}

@@ -17,6 +17,9 @@
 
 \item{drop}{drop dimensions?}
 }
+\value{
+a \code{DataFrame} subset by rows and/or columns
+}
 \description{
 Subset a DataFrame
 }

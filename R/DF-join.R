@@ -1,3 +1,4 @@
+#' @keywords internal
 check_common_columns <- function(names_x, names_y) {
     by <- intersect(names_x, names_y)
 
@@ -13,6 +14,7 @@ check_common_columns <- function(names_x, names_y) {
     return(by)
 }
 
+#' @keywords internal
 is_leftish <- function(...) {
     # does this look like a non-right join?
     args <- list(...)
@@ -22,6 +24,7 @@ is_leftish <- function(...) {
     TRUE
 }
 
+#' @keywords internal
 join_internal <- function(x, y, by = NULL, ...) {
     use_rownames <- is_leftish(...)
     if (use_rownames) x$...rownames <- rownames(x)
@@ -47,7 +50,8 @@ join_internal <- function(x, y, by = NULL, ...) {
 #'
 #' @param x a `DataFrame`
 #' @param y a `DataFrame` or `data.frame`
-#' @param by columns to use for joining the objects. If `NULL`, the function will look for common columns.
+#' @param by columns to use for joining the objects. If `NULL`, the function
+#'   will look for common columns.
 #'
 #' @return a `DataFrame`
 #' @examples

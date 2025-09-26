@@ -11,6 +11,9 @@ rename2(.data, ...)
 
 \item{...}{columns to be renamed with syntax \code{new = old}}
 }
+\value{
+Deprecated - use \code{rename}
+}
 \description{
 Rename Columns of a DataFrame (deprecated)
 }
