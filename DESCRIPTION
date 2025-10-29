@@ -1,6 +1,6 @@
 Package: DFplyr
 Title: A `DataFrame` (`S4Vectors`) backend for `dplyr`
-Version: 1.4.0
+Version: 1.5.0
 Authors@R: c(person("Jonathan", "Carroll", 
     email = "rpkg@jcarroll.com.au", 
     role = c("aut", "cre"), 
