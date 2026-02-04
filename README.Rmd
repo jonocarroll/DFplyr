@@ -57,15 +57,6 @@ d$nl <- IRanges::NumericList(lapply(d$gear, function(n) round(rnorm(n), 2)))
 d
 ```
 
-This will appear in RStudio's environment pane as a 
-
-```
-Formal class DataFrame (dplyr-compatible)
-``` 
-
-when using `DFplyr`. No interference with the actual object is required, but
-this helps identify that `dplyr`-compatibility is available.
-
 `DataFrame`s can then be used in `dplyr` calls the same as `data.frame` or
 `tibble` objects. Support for working with S4 columns is enabled provided they
 have appropriate functions. Adding multiple columns will result in the new
@@ -136,13 +127,11 @@ group_by(d, gear) %>%
     slice(1:2)
 ```
 
-`rename` is itself renamed to `rename2` due to conflicts between {dplyr} and 
-{S4Vectors}, but works in the {dplyr} sense of taking `new = old` replacements 
-with NSE syntax
+`rename` works in the {dplyr} sense of taking `new = old` replacements with NSE syntax
 
 ```{r}
 select(d, am, cyl) %>%
-    rename2(foo = am)
+    rename(foo = am)
 ```
 
 Row names are not preserved when there may be duplicates or they don't make
