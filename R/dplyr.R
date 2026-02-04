@@ -561,7 +561,7 @@ group_intersect <- function(x, new) {
     if (is.null(get_group_data(x))) {
         return(.s4_subset(x, i, j, ..., drop = drop))
     }
-    out <- ungroup(x)[i, j, drop = drop]
+    out <- .s4_subset(ungroup(x), i, j, drop = drop)
     if (drop) {
         out
     } else {
