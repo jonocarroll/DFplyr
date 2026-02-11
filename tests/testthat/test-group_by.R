@@ -1,8 +1,21 @@
+test_that("conversion from data.frame works", {
+  m <- mtcars
+  M <- as(m, "GroupedDataFrame")
+  expect_s4_class(M, "DataFrame") # no groups, defaults to DataFrame
+  m <- group_by(mtcars, cyl)
+  M <- as(m, "DataFrame")
+  expect_s4_class(M, "GroupedDataFrame")
+  expect_identical(group_vars(M), "cyl")
+  M <- as(m, "GroupedDataFrame")
+  expect_s4_class(M, "GroupedDataFrame")
+  expect_identical(group_vars(M), "cyl")
+})
+
 test_that("group_by works with regular columns", {
     d <- S4Vectors::DataFrame(mtcars)
 
     g <- group_by(d, am, cyl)
-    expect_s4_class(g, "DataFrame")
+    expect_s4_class(g, "GroupedDataFrame")
     expect_identical(nrow(g), 32L)
     expect_identical(names(g), names(mtcars))
     expect_equal(ungroup(g), d)
@@ -32,7 +45,7 @@ test_that("filter respects groups", {
     d <- S4Vectors::DataFrame(mtcars)
 
     gf <- filter(group_by(d, am, cyl), hp == max(hp))
-    expect_s4_class(gf, "DataFrame")
+    expect_s4_class(gf, "GroupedDataFrame")
     expect_identical(nrow(gf), 8L)
     expect_identical(names(gf), names(mtcars))
     gfd <- dplyr::filter(dplyr::group_by(mtcars, am, cyl), hp == max(hp))
@@ -42,7 +55,7 @@ test_that("filter respects groups", {
 test_that("mutate respects groups", {
     d <- S4Vectors::DataFrame(mtcars)
     gm <- mutate(group_by(d, am, cyl), newvar = mean(hp))
-    expect_s4_class(gm, "DataFrame")
+    expect_s4_class(gm, "GroupedDataFrame")
     expect_identical(nrow(gm), 32L)
     expect_identical(names(gm), c(names(mtcars), "newvar"))
     gmd <- dplyr::mutate(dplyr::group_by(mtcars, am, cyl), newvar = mean(hp))
@@ -102,4 +115,15 @@ test_that("Unknown columns raise an error", {
         as(mtcars, "DataFrame") %>% group_by(foobar),
         regexp = "Column 'foobar' not found in data"
     )
+})
+
+test_that("Regrouping extends groups", {
+  d <- as(mtcars, "DataFrame")
+  single <- group_by(d, cyl, am)
+  double <- group_by(group_by(d, cyl), am)
+  expect_s4_class(single, "GroupedDataFrame")
+  expect_s4_class(double, "GroupedDataFrame")
+  expect_identical(double, single)
+  expect_identical(group_vars(single), c("cyl", "am"))
+  expect_identical(group_vars(double), c("cyl", "am"))
 })

@@ -10,36 +10,54 @@ format.DataFrame <- function(x, ...) {
 #' @importFrom rlang quos eval_tidy
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
-    FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-    groupvars <- group_vars(.data)
-    if (length(groupvars) > 0L) {
-        groups <- group_data(.data)
-        split_data <- lapply(seq_len(nrow(groups)), function(x) {
-            .data_grp <- .data[groups$.rows[x][[1]], , drop = FALSE]
-            for (f in seq_along(FNS)) {
-                .data_grp <- with(
-                    .data_grp,
-                    base::subset(
-                        .data_grp,
-                        rlang::eval_tidy(FNS[[f]])
-                    )
-                )
-            }
-            .data_grp
-        })
-        do.call(rbind, split_data)
-    } else {
-        for (f in seq_along(FNS)) {
-            .data <- with(
-                .data,
-                base::subset(
-                    .data,
-                    rlang::eval_tidy(FNS[[f]])
-                )
-            )
-        }
-        .data
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+  for (f in seq_along(FNS)) {
+    .data <- with(
+      .data,
+      base::subset(
+        .data,
+        rlang::eval_tidy(FNS[[f]])
+      )
+    )
+  }
+  .data
+}
+
+#' @inherit dplyr::filter
+#' @importFrom rlang quos eval_tidy
+#' @export
+filter.GroupedDataFrame <- function(.data, ..., .preserve = FALSE) {
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+  groupvars <- group_vars(.data)
+  if (length(groupvars) > 0L) {
+    groups <- group_data(.data)
+    split_data <- lapply(seq_len(nrow(groups)), function(x) {
+      .data_grp <- .data[groups$.rows[x][[1]], , drop = FALSE]
+      for (f in seq_along(FNS)) {
+        .data_grp <- with(
+          .data_grp,
+          S4Vectors::subset(
+            .data_grp,
+            rlang::eval_tidy(FNS[[f]])
+          )
+        )
+      }
+      .data_grp
+    })
+    res <- group_by(do.call(rbind, split_data), !!!groupvars)
+  } else {
+    for (f in seq_along(FNS)) {
+      .data <- with(
+        .data,
+        base::subset(
+          .data,
+          rlang::eval_tidy(FNS[[f]])
+        )
+      )
     }
+    res <- .data
+  }
+
 }
 
 #' @inherit dplyr::mutate
@@ -47,18 +65,30 @@ filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
 #' @export
 mutate.DataFrame <- function(.data, ...) {
     FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+    mutate_internal(.data, FNS, rlang::quos(...))
+}
 
-    groupvars <- group_vars(.data)
-    if (length(groupvars) > 0L) {
-        groups <- group_data(.data)
-        split_data <- lapply(seq_len(nrow(groups)), function(x) {
-            .data_grp <- .data[groups$.rows[x][[1]], , drop = FALSE]
-            mutate_internal(.data_grp, FNS, rlang::quos(...))
-        })
-        do.call(rbind, split_data)
-    } else {
-        mutate_internal(.data, FNS, rlang::quos(...))
-    }
+#' @export
+mutate.GroupedDataFrame <- function(.data, ...) {
+  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+  groupvars <- group_vars(.data)
+  if (length(groupvars) > 0L) {
+    groups <- group_data(.data)
+    split_data <- lapply(seq_len(nrow(groups)), function(x) {
+      idx <- groups$.rows[x][[1]]
+      if (length(idx) == 0) {
+        NULL
+      } else {
+        .data_grp <- .data[idx, , drop = FALSE]
+        mutate_internal(.data_grp, FNS, rlang::quos(...))
+      }
+    })
+    res <- do.call(rbind, split_data)
+  } else {
+    res <- mutate_internal(.data, FNS, rlang::quos(...))
+  }
+  # regroup
+  group_by(res, !!!groupvars)
 }
 
 #' @keywords internal
@@ -88,7 +118,7 @@ mutate_internal <- function(.data, FUNS, quos) {
         }
     })
     S4Vectors::within(
-        .data,
+        ungroup(.data),
         eval(
             parse(
                 text = paste0(unlist(EXPRS), collapse = "\n")
@@ -264,7 +294,6 @@ summarize.DataFrame <- summarise.DataFrame
 #' @return a `data.frame` of group data
 #' @export
 group_data.DataFrame <- function(.data) {
-    # group_attr <- attr(.data@listData, "groups")
     group_attr <- get_group_data(.data)
     if (!is.null(group_attr) && nrow(group_attr) > 1L) {
         group_attr
@@ -279,13 +308,18 @@ group_data.DataFrame <- function(.data) {
 #' @param x a [S4Vectors::DataFrame()], likely grouped
 #' @return the grouping variables as a character vector
 #' @export
-group_vars.DataFrame <- function(x) {
+group_vars.GroupedDataFrame <- function(x) {
     groups <- group_data(x)
     if (is.character(groups)) {
         groups
     } else if (is.data.frame(groups)) {
         head(names(groups), -1L)
     }
+}
+
+#' @export
+group_vars.DataFrame <- function(x) {
+  NULL
 }
 
 #' @inherit dplyr::group_by
@@ -330,6 +364,53 @@ group_by.DataFrame <- function(.data,
     .data
 }
 
+#' @export
+group_by.GroupedDataFrame <- function(.data,
+                                      ...,
+                                      add = FALSE,
+                                      .drop = group_by_drop_default(.data)) {
+  if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
+    groupvars <- lapply(
+      rlang::quos(...),
+      function(x) rlang::as_string(rlang::quo_squash(x))
+    )
+    for (v in groupvars) {
+      if (!utils::hasName(.data, v)) {
+        stop("Column '", v, "' not found in data")
+      }
+    }
+    uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
+    flagged <- S4Vectors::merge(
+      mutate(.data, rowid = seq_len(nrow(.data))),
+      mutate(uniques, flag = seq_len(nrow(uniques))),
+      by = unlist(groupvars),
+      sort = FALSE
+    )
+    groups <- split(as.integer(flagged$rowid), flagged$flag)
+    uniques <- as.data.frame(uniques)
+    uniques$.rows <- unname(groups)
+    groupdata <- uniques[
+      with(
+        uniques,
+        do.call(order, rlang::syms(groupvars))
+      ),
+    ]
+    if (!inherits(groupdata, "data.frame")) {
+      return(.data)
+    }
+    rownames(groupdata) <- seq_len(nrow(groupdata))
+    .data <- set_group_data(.data, groupdata, .drop)
+  } else {
+    oldgroupvars <- group_vars(.data)
+    newgroupvars <- lapply(
+      rlang::quos(...),
+      function(x) rlang::as_string(rlang::quo_squash(x))
+    )
+    .data <- group_by(methods::as(ungroup(.data), "DFrame"), !!!rlang::syms(union(oldgroupvars, newgroupvars)))
+  }
+  .data
+}
+
 #' Set and Get Group Data on a DataFrame
 #'
 #' The location of group data is an internal implemnetation
@@ -350,6 +431,7 @@ set_group_data <- function(x, g, .drop = group_by_drop_default(x)) {
         attr(g, ".drop") <- .drop
     }
     metadata(x)$groups <- g
+    class(x) <- "GroupedDataFrame"
     x
 }
 
@@ -361,8 +443,18 @@ get_group_data <- function(x) {
 
 #' @inherit dplyr::ungroup
 #' @export
+ungroup.GroupedDataFrame <- function(x, ...) {
+    res <- set_group_data(x, NULL)
+    if (inherits(res, "GroupedDataFrame")) {
+      class(res) <- "DFrame"
+    }
+    res
+}
+
+#' @inherit dplyr::ungroup
+#' @export
 ungroup.DataFrame <- function(x, ...) {
-    set_group_data(x, NULL)
+  x
 }
 
 #' @inherit dplyr::arrange
@@ -517,51 +609,54 @@ group_intersect <- function(x, new) {
 }
 
 
-.s4_subset <- function(x, i, j, ..., drop = TRUE) {
-    if (!isTRUEorFALSE(drop)) stop("'drop' must be TRUE or FALSE")
-    if (length(list(...)) > 0L) warning("parameters in '...' not supported")
-
-    ## NOTE: matrix-style subsetting by logical matrix not supported.
-    list_style_subsetting <- (nargs() - !missing(drop)) < 3L
-    if (list_style_subsetting || !missing(j)) {
-        if (list_style_subsetting) {
-            if (!missing(drop)) {
-                warning("'drop' argument ignored by list-style subsetting")
-            }
-            if (missing(i)) {
-                return(x)
-            }
-            j <- i
-        }
-        x <- S4Vectors::extractCOLS(x, j)
-        if (list_style_subsetting) {
-            return(x)
-        }
-    }
-    if (!missing(i)) x <- S4Vectors::extractROWS(x, i)
-    if (missing(drop)) {
-        # drop by default if only one column left
-        drop <- ncol(x) == 1L
-    }
-    if (drop) {
-        ## one column left
-        if (ncol(x) == 1L) {
-            return(x[[1L]])
-        }
-        ## one row left
-        if (nrow(x) == 1L) {
-            return(methods::as(x, "list"))
-        }
-    }
-    x
-}
-
+# .s4_subset <- function(x, i, j, ..., drop = TRUE) {
+#     if (!isTRUEorFALSE(drop)) stop("'drop' must be TRUE or FALSE")
+#     if (length(list(...)) > 0L) warning("parameters in '...' not supported")
+#
+#     ## NOTE: matrix-style subsetting by logical matrix not supported.
+#     list_style_subsetting <- (nargs() - !missing(drop)) < 3L
+#     if (list_style_subsetting || !missing(j)) {
+#         if (list_style_subsetting) {
+#             if (!missing(drop)) {
+#                 warning("'drop' argument ignored by list-style subsetting")
+#             }
+#             if (missing(i)) {
+#                 return(x)
+#             }
+#             j <- i
+#         }
+#         x <- S4Vectors::extractCOLS(x, j)
+#         if (list_style_subsetting) {
+#             return(x)
+#         }
+#     }
+#     if (!missing(i)) x <- S4Vectors::extractROWS(x, i)
+#     if (missing(drop)) {
+#         # drop by default if only one column left
+#         drop <- ncol(x) == 1L
+#     }
+#     if (drop) {
+#         ## one column left
+#         if (ncol(x) == 1L) {
+#             return(x[[1L]])
+#         }
+#         ## one row left
+#         if (nrow(x) == 1L) {
+#             return(methods::as(x, "list"))
+#         }
+#     }
+#     x
+# }
 
 .grp_subset <- function(x, i, j, ..., drop = FALSE) {
     if (is.null(get_group_data(x))) {
-        return(.s4_subset(x, i, j, ..., drop = drop))
+      return(S4Vectors::subset(x, i, j, ..., drop = drop))
     }
-    out <- .s4_subset(ungroup(x), i, j, drop = drop)
+    if (missing(j)) {
+      out <- ungroup(x)[i, ]
+    } else {
+      out <- ungroup(x)[i, j] #S4Vectors::subset(ungroup(x), i, j, drop = drop)
+    }
     if (drop) {
         out
     } else {
@@ -583,7 +678,7 @@ group_intersect <- function(x, new) {
 #' @param drop drop dimensions?
 #' @return a `DataFrame` subset by rows and/or columns
 #' @export
-setMethod("[", "DataFrame", .grp_subset)
+setMethod("[", "GroupedDataFrame", .grp_subset)
 
 .grp_bindROWS <- function(x, objects = list()) {
     combined <- methods::getMethod(
@@ -605,4 +700,4 @@ setMethod("[", "DataFrame", .grp_subset)
 #' @param objects a list of DataFrames
 #' @return a new `DataFrame` combining the inputs by rows
 #' @export
-setMethod("bindROWS", "DataFrame", .grp_bindROWS)
+setMethod("bindROWS", "GroupedDataFrame", .grp_bindROWS)
