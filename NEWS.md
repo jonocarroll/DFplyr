@@ -1,3 +1,14 @@
+# DFplyr 1.6.0
+
+NEW FEATURES
+
+* Fixed column-wise slicing
+* Aligned to S4Vectors updates
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+* Grouped DataFrame now appears as a new class GroupedDataFrame with its own dispatched methods 
+
 # DFplyr 1.4.0
 
 NEW FEATURES

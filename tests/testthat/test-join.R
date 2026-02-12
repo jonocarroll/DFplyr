@@ -19,23 +19,28 @@ test_that("join preserves groups when possible", {
     Res_inner <- inner_join(Da, Db[1:3, ])
     Res_full <- full_join(Da, Db[1:3, ])
 
-    expect_s4_class(Res_left, "DataFrame")
-    expect_s4_class(Res_right, "DataFrame")
-    expect_s4_class(Res_inner, "DataFrame")
-    expect_s4_class(Res_full, "DataFrame")
+    expect_s4_class(Res_left, "GroupedDataFrame")
+    expect_s4_class(Res_right, "GroupedDataFrame")
+    expect_s4_class(Res_inner, "GroupedDataFrame")
+    expect_s4_class(Res_full, "GroupedDataFrame")
 
-    expect_identical(Res_left, as(res_left, "DataFrame") %>% group_by(eye_color))
-    expect_identical(
-        arrange(Res_right, name),
-        arrange(as(res_right, "DataFrame"), name) %>% group_by(eye_color)
+    expect_equal(Res_left, as(res_left, "DataFrame") %>% group_by(eye_color), ignore_attr = TRUE)
+
+    expect_equal(
+      arrange(ungroup(Res_right), name),
+      arrange(as(ungroup(res_right), "DataFrame"), name),
+      ignore_attr = TRUE
     )
-    expect_identical(
+
+    expect_equal(
         Res_inner,
-        as(res_inner, "DataFrame") %>% group_by(eye_color)
+        as(res_inner, "DataFrame") %>% group_by(eye_color),
+        ignore_attr = TRUE
     )
-    expect_identical(
-        arrange(Res_full, name),
-        arrange(as(res_full, "DataFrame"), name)
+    expect_equal(
+        arrange(ungroup(Res_full), name),
+        arrange(as(ungroup(res_full), "DataFrame"), name),
+        ignore_attr = TRUE
     )
 
     # groups altered
@@ -55,3 +60,4 @@ test_that("join preserves groups when possible", {
     expect_s4_class(Res_inner, "DataFrame")
     expect_s4_class(Res_full, "DataFrame")
 })
+

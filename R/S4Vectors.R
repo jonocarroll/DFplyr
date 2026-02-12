@@ -46,7 +46,12 @@
     invisible(NULL)
 }
 
-setMethod("show", "DataFrame", .show_DF)
+setClass("GroupedDataFrame",
+         contains=c("DFrame"),
+         representation("VIRTUAL")
+)
+
+setMethod("show", "GroupedDataFrame", .show_DF)
 
 .make_rownames_for_RectangularData_display <- function(
         x_rownames,
@@ -130,16 +135,38 @@ setMethod("show", "DataFrame", .show_DF)
     new2("DFrame", nrows = nrows, listData = listData, check = FALSE)
 }
 
-
-setAs("grouped_df", "DFrame", function(from) {
-    grps <- dplyr::group_vars(from)
-    from <- dplyr::ungroup(from)
-    rn <- attributes(from)[["row.names"]]
-    if (is.integer(rn)) rn <- NULL
-    nr <- nrow(from)
-    attr(from, "row.names") <- NULL
-    class(from) <- NULL
-    ans <- .new_DataFrame(from, nrows = nr)
-    ans@rownames <- rn
-    group_by(ans, !!!grps)
+setAs("grouped_df", "DataFrame", function(from) {
+  grps <- dplyr::group_vars(from)
+  group_by(as(ungroup(from), "DataFrame"), !!!rlang::syms(grps))
 })
+
+setAs("grouped_df", "GroupedDataFrame", function(from) {
+  grps <- dplyr::group_vars(from)
+  group_by(as(ungroup(from), "DataFrame"), !!!rlang::syms(grps))
+})
+
+setAs("DFrame", "GroupedDataFrame", function(from) {
+    grps <- dplyr::group_vars(from)
+    group_by(from, !!!rlang::syms(grps))
+})
+
+setAs("GroupedDataFrame", "DFrame", function(from) {
+  ungroup(from)
+})
+
+setAs("GroupedDataFrame", "data.frame", function(from) {
+  as.data.frame(ungroup(from))
+})
+
+setAs("data.frame", "GroupedDataFrame", function(from) {
+  methods::as(methods::as(from, "DFrame"), "GroupedDataFrame")
+})
+
+as.data.frame.GroupedDataFrame <- function(x, row.names=NULL, optional=FALSE,
+                                           make.names=TRUE, ...,
+                                           stringsAsFactors=FALSE) {
+  as.data.frame(methods::as(x, "DFrame"))
+}
+
+setMethod("as.data.frame", "GroupedDataFrame", as.data.frame.GroupedDataFrame)
+
