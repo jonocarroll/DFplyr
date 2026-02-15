@@ -17,11 +17,8 @@ summary functions. The name will be the name of the variable in the result.
 The value can be:
 \itemize{
 \item A vector of length 1, e.g. \code{min(x)}, \code{n()}, or \code{sum(is.na(y))}.
-\item A data frame, to add multiple columns from a single expression.
-}
-
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Returning values with size 0 or >1 was
-deprecated as of 1.1.0. Please use \code{\link[dplyr:reframe]{reframe()}} for this instead.}
+\item A data frame with 1 row, to add multiple columns from a single expression.
+}}
 }
 \value{
 An object \emph{usually} of the same type as \code{.data}.
@@ -89,41 +86,30 @@ The following methods are currently available in loaded packages:
 
 \examples{
 # A summary applied to ungrouped tbl returns a single row
-mtcars \%>\%
+mtcars |>
   summarise(mean = mean(disp), n = n())
 
 # Usually, you'll want to group first
-mtcars \%>\%
-  group_by(cyl) \%>\%
+mtcars |>
+  group_by(cyl) |>
   summarise(mean = mean(disp), n = n())
 
 # Each summary call removes one grouping level (since that group
 # is now just a single row)
-mtcars \%>\%
-  group_by(cyl, vs) \%>\%
-  summarise(cyl_n = n()) \%>\%
+mtcars |>
+  group_by(cyl, vs) |>
+  summarise(cyl_n = n()) |>
   group_vars()
 
 # BEWARE: reusing variables may lead to unexpected results
-mtcars \%>\%
-  group_by(cyl) \%>\%
+mtcars |>
+  group_by(cyl) |>
   summarise(disp = mean(disp), sd = sd(disp))
 
 # Refer to column names stored as strings with the `.data` pronoun:
 var <- "mass"
 summarise(starwars, avg = mean(.data[[var]], na.rm = TRUE))
 # Learn more in ?rlang::args_data_masking
-
-# In dplyr 1.1.0, returning multiple rows per group was deprecated in favor
-# of `reframe()`, which never messages and always returns an ungrouped
-# result:
-mtcars \%>\%
-   group_by(cyl) \%>\%
-   summarise(qs = quantile(disp, c(0.25, 0.75)), prob = c(0.25, 0.75))
-# ->
-mtcars \%>\%
-   group_by(cyl) \%>\%
-   reframe(qs = quantile(disp, c(0.25, 0.75)), prob = c(0.25, 0.75))
 }
 \seealso{
 Other single table verbs: 

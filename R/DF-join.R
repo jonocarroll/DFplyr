@@ -67,52 +67,48 @@ join_internal <- function(x, y, by = NULL, ...) {
 #'
 #' @export
 #' @keywords internal
-inner_join.DataFrame <- function(
-        x,
-        y,
-        by = NULL,
-        copy = FALSE,
-        suffix = c(".x", ".y"),
-        ...,
-        keep = NULL) {
+inner_join.DataFrame <- function(x,
+    y,
+    by = NULL,
+    copy = FALSE,
+    suffix = c(".x", ".y"),
+    ...,
+    keep = NULL) {
     join_internal(x = x, y = y, by = by, all = FALSE)
 }
 
 #' @export
 #' @keywords internal
-left_join.DataFrame <- function(
-        x,
-        y,
-        by = NULL,
-        copy = FALSE,
-        suffix = c(".x", ".y"),
-        ...,
-        keep = NULL) {
+left_join.DataFrame <- function(x,
+    y,
+    by = NULL,
+    copy = FALSE,
+    suffix = c(".x", ".y"),
+    ...,
+    keep = NULL) {
     join_internal(x = x, y = y, by = by, all.x = TRUE)
 }
 
 #' @export
 #' @keywords internal
-right_join.DataFrame <- function(
-        x,
-        y,
-        by = NULL,
-        copy = FALSE,
-        suffix = c(".x", ".y"),
-        ...,
-        keep = NULL) {
+right_join.DataFrame <- function(x,
+    y,
+    by = NULL,
+    copy = FALSE,
+    suffix = c(".x", ".y"),
+    ...,
+    keep = NULL) {
     join_internal(x = x, y = y, by = by, all.y = TRUE)
 }
 
 #' @export
 #' @keywords internal
-full_join.DataFrame <- function(
-        x,
-        y,
-        by = NULL,
-        copy = FALSE,
-        suffix = c(".x", ".y"),
-        ...,
-        keep = NULL) {
+full_join.DataFrame <- function(x,
+    y,
+    by = NULL,
+    copy = FALSE,
+    suffix = c(".x", ".y"),
+    ...,
+    keep = NULL) {
     join_internal(x = x, y = y, by = by, all = TRUE)
 }

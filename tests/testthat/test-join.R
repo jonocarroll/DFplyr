@@ -27,9 +27,9 @@ test_that("join preserves groups when possible", {
     expect_equal(Res_left, as(res_left, "DataFrame") %>% group_by(eye_color), ignore_attr = TRUE)
 
     expect_equal(
-      arrange(ungroup(Res_right), name),
-      arrange(as(ungroup(res_right), "DataFrame"), name),
-      ignore_attr = TRUE
+        arrange(ungroup(Res_right), name),
+        arrange(as(ungroup(res_right), "DataFrame"), name),
+        ignore_attr = TRUE
     )
 
     expect_equal(
@@ -60,4 +60,3 @@ test_that("join preserves groups when possible", {
     expect_s4_class(Res_inner, "DataFrame")
     expect_s4_class(Res_full, "DataFrame")
 })
-

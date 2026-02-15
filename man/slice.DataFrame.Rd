@@ -20,9 +20,8 @@ Indices beyond the number of rows in the input are silently ignored.
 
 For \verb{slice_*()}, these arguments are passed on to methods.}
 
-\item{.preserve}{Relevant when the \code{.data} input is grouped.
-If \code{.preserve = FALSE} (the default), the grouping structure
-is recalculated based on the resulting data, otherwise the grouping is kept as is.}
+\item{.preserve}{Relevant when the \code{.data} input is grouped. If \code{.preserve = FALSE} (the default), the grouping structure is recalculated based on the
+resulting data, otherwise the grouping is kept as is.}
 }
 \value{
 An object of the same type as \code{.data}. The output has the following
@@ -53,6 +52,12 @@ each group.
 Slice does not work with relational databases because they have no
 intrinsic notion of row order. If you want to perform the equivalent
 operation, use \code{\link[dplyr:filter]{filter()}} and \code{\link[dplyr:row_number]{row_number()}}.
+
+For \code{slice_sample()}, note that the weights provided in \code{weight_by} are
+passed through to the \code{prob} argument of \code{\link[base:sample]{base::sample.int()}}. This means
+they cannot be used to reconstruct summary statistics from the underlying
+population. See \href{https://stats.stackexchange.com/q/639211/}{this discussion}
+for more details.
 }
 \section{Methods}{
 
@@ -75,37 +80,40 @@ Methods available in currently loaded packages:
 
 \examples{
 # Similar to head(mtcars, 1):
-mtcars \%>\% slice(1L)
+mtcars |> slice(1L)
 # Similar to tail(mtcars, 1):
-mtcars \%>\% slice(n())
-mtcars \%>\% slice(5:n())
+mtcars |> slice(n())
+mtcars |> slice(5:n())
 # Rows can be dropped with negative indices:
 slice(mtcars, -(1:4))
 
 # First and last rows based on existing order
-mtcars \%>\% slice_head(n = 5)
-mtcars \%>\% slice_tail(n = 5)
+mtcars |> slice_head(n = 5)
+mtcars |> slice_tail(n = 5)
 
 # Rows with minimum and maximum values of a variable
-mtcars \%>\% slice_min(mpg, n = 5)
-mtcars \%>\% slice_max(mpg, n = 5)
+mtcars |> slice_min(mpg, n = 5)
+mtcars |> slice_max(mpg, n = 5)
 
 # slice_min() and slice_max() may return more rows than requested
 # in the presence of ties.
-mtcars \%>\% slice_min(cyl, n = 1)
+mtcars |> slice_min(cyl, n = 1)
 # Use with_ties = FALSE to return exactly n matches
-mtcars \%>\% slice_min(cyl, n = 1, with_ties = FALSE)
+mtcars |> slice_min(cyl, n = 1, with_ties = FALSE)
 # Or use additional variables to break the tie:
-mtcars \%>\% slice_min(tibble(cyl, mpg), n = 1)
+mtcars |> slice_min(tibble(cyl, mpg), n = 1)
 
 # slice_sample() allows you to random select with or without replacement
-mtcars \%>\% slice_sample(n = 5)
-mtcars \%>\% slice_sample(n = 5, replace = TRUE)
+mtcars |> slice_sample(n = 5)
+mtcars |> slice_sample(n = 5, replace = TRUE)
 
-# you can optionally weight by a variable - this code weights by the
+# slice_sample() can be used to shuffle rows with `prop = 1`
+mtcars |> slice_sample(prop = 1)
+
+# You can optionally weight by a variable - this code weights by the
 # physical weight of the cars, so heavy cars are more likely to get
-# selected
-mtcars \%>\% slice_sample(weight_by = wt, n = 5)
+# selected.
+mtcars |> slice_sample(weight_by = wt, n = 5)
 
 # Group wise operation ----------------------------------------
 df <- tibble(
@@ -115,11 +123,11 @@ df <- tibble(
 
 # All slice helpers operate per group, silently truncating to the group
 # size, so the following code works without error
-df \%>\% group_by(group) \%>\% slice_head(n = 2)
+df |> group_by(group) |> slice_head(n = 2)
 
 # When specifying the proportion of rows to include non-integer sizes
 # are rounded down, so group a gets 0 rows
-df \%>\% group_by(group) \%>\% slice_head(prop = 0.5)
+df |> group_by(group) |> slice_head(prop = 0.5)
 
 # Filter equivalents --------------------------------------------
 # slice() expressions can often be written to use `filter()` and

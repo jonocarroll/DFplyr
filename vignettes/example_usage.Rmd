@@ -195,7 +195,8 @@ group_by(d, gear) %>%
     slice(1:2)
 ```
 
-`rename` works in the `r CRANpkg("dplyr")` sense of taking `new = old` replacements with NSE syntax
+`rename` works in the `r CRANpkg("dplyr")` sense of taking `new = old` 
+replacements with NSE syntax
 
 ```{r "rename2"}
 select(d, am, cyl) %>%

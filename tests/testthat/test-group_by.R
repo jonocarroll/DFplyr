@@ -1,14 +1,14 @@
 test_that("conversion from data.frame works", {
-  m <- mtcars
-  M <- as(m, "GroupedDataFrame")
-  expect_s4_class(M, "DataFrame") # no groups, defaults to DataFrame
-  m <- group_by(mtcars, cyl)
-  M <- as(m, "DataFrame")
-  expect_s4_class(M, "GroupedDataFrame")
-  expect_identical(group_vars(M), "cyl")
-  M <- as(m, "GroupedDataFrame")
-  expect_s4_class(M, "GroupedDataFrame")
-  expect_identical(group_vars(M), "cyl")
+    m <- mtcars
+    M <- as(m, "GroupedDataFrame")
+    expect_s4_class(M, "DataFrame") # no groups, defaults to DataFrame
+    m <- group_by(mtcars, cyl)
+    M <- as(m, "DataFrame")
+    expect_s4_class(M, "GroupedDataFrame")
+    expect_identical(group_vars(M), "cyl")
+    M <- as(m, "GroupedDataFrame")
+    expect_s4_class(M, "GroupedDataFrame")
+    expect_identical(group_vars(M), "cyl")
 })
 
 test_that("group_by works with regular columns", {
@@ -118,12 +118,12 @@ test_that("Unknown columns raise an error", {
 })
 
 test_that("Regrouping extends groups", {
-  d <- as(mtcars, "DataFrame")
-  single <- group_by(d, cyl, am)
-  double <- group_by(group_by(d, cyl), am)
-  expect_s4_class(single, "GroupedDataFrame")
-  expect_s4_class(double, "GroupedDataFrame")
-  expect_identical(double, single)
-  expect_identical(group_vars(single), c("cyl", "am"))
-  expect_identical(group_vars(double), c("cyl", "am"))
+    d <- as(mtcars, "DataFrame")
+    single <- group_by(d, cyl, am)
+    double <- group_by(group_by(d, cyl), am)
+    expect_s4_class(single, "GroupedDataFrame")
+    expect_s4_class(double, "GroupedDataFrame")
+    expect_identical(double, single)
+    expect_identical(group_vars(single), c("cyl", "am"))
+    expect_identical(group_vars(double), c("cyl", "am"))
 })

@@ -5,15 +5,20 @@
     x_ncol <- ncol(object)
     cat(
         S4Vectors::classNameForDisplay(object),
-        " with ", x_nrow, " row",
+        " with ",
+        x_nrow,
+        " row",
         ifelse(x_nrow == 1L, "", "s"),
-        " and ", x_ncol, " column",
+        " and ",
+        x_ncol,
+        " column",
         ifelse(x_ncol == 1L, "", "s"),
         "\n",
         sep = ""
     )
     ## add group information
-    if (!is.null(group_data(object)) & nrow(group_data(object)) > 1L) {
+    if (!is.null(group_data(object)) &
+        nrow(group_data(object)) > 1L) {
         cat("Groups: ", toString(group_vars(object)), "\n")
     }
     if (x_nrow != 0L && x_ncol != 0L) {
@@ -27,17 +32,14 @@
             m <- rbind(
                 S4Vectors::makeNakedCharacterMatrixForDisplay(
                     head(ungroup(object), nhead)
-                ),
+                    ),
                 rbind(rep.int("...", x_ncol)),
                 S4Vectors::makeNakedCharacterMatrixForDisplay(
                     tail(ungroup(object), ntail)
                 )
             )
             rownames(m) <- .make_rownames_for_RectangularData_display(
-                x_rownames,
-                x_nrow,
-                nhead,
-                ntail
+                x_rownames, x_nrow, nhead, ntail
             )
         }
         m <- rbind(.make_class_info_for_DataFrame_display(object), m)
@@ -47,17 +49,16 @@
 }
 
 setClass("GroupedDataFrame",
-         contains=c("DFrame"),
-         representation("VIRTUAL")
+    contains = c("DFrame"),
+    representation("VIRTUAL")
 )
 
 setMethod("show", "GroupedDataFrame", .show_DF)
 
-.make_rownames_for_RectangularData_display <- function(
-        x_rownames,
-        nrow,
-        nhead,
-        ntail) {
+.make_rownames_for_RectangularData_display <- function(x_rownames,
+                                                        nrow,
+                                                        nhead,
+                                                        ntail) {
     p1 <- ifelse(nhead == 0L, 0L, 1L)
     p2 <- ifelse(ntail == 0L, 0L, ntail - 1L)
     s1 <- s2 <- character(0)
@@ -81,40 +82,41 @@ setMethod("show", "GroupedDataFrame", .show_DF)
 
 .make_class_info_for_DataFrame_display <- function(x) {
     matrix(
-        unlist(
-            lapply(x, function(col) {
-                paste0("<", .classNameForDisplay(col), ">")
-            }),
-            use.names = FALSE
-        ),
+        unlist(lapply(x, function(col) {
+            paste0("<", .classNameForDisplay(col), ">")
+        }), use.names = FALSE),
         nrow = 1L,
         dimnames = list("", colnames(x))
     )
 }
 
-.classNameForDisplay <- function(x) class(x)[1L]
+.classNameForDisplay <- function(x) {
+    class(x)[1L]
+}
 
 # borrowed from S4Vectors (not exported)
-.new_DataFrame <- function(listData = list(), nrows = NA, what = "arguments") {
+.new_DataFrame <- function(listData = list(),
+    nrows = NA,
+    what = "arguments") {
     stopifnot(is.list(listData))
     stopifnot(S4Vectors::isSingleNumberOrNA(nrows))
-    if (!is.integer(nrows)) nrows <- as.integer(nrows)
+    if (!is.integer(nrows)) {
+        nrows <- as.integer(nrows)
+    }
     listData_nrow <- nrow(listData)
     if (is.null(listData_nrow)) {
         if (length(listData) == 0L) {
-            if (is.na(nrows)) nrows <- 0L
+            if (is.na(nrows)) {
+                nrows <- 0L
+            }
             names(listData) <- character(0)
         } else {
             if (is.na(nrows)) {
                 elt_nrows <- S4Vectors::elementNROWS(listData)
                 nrows <- elt_nrows[[1L]]
                 if (!all(elt_nrows == nrows)) {
-                    stop(
-                        S4Vectors::wmsg(
-                            what,
-                            " imply differing number of rows"
-                        )
-                    )
+                    stop(S4Vectors::wmsg(what,
+                        " imply differing number of rows"))
                 }
             }
             if (is.null(names(listData))) {
@@ -132,17 +134,21 @@ setMethod("show", "GroupedDataFrame", .show_DF)
         }
         listData <- as.list(listData)
     }
-    new2("DFrame", nrows = nrows, listData = listData, check = FALSE)
+    new2("DFrame",
+        nrows = nrows,
+        listData = listData,
+        check = FALSE
+    )
 }
 
 setAs("grouped_df", "DataFrame", function(from) {
-  grps <- dplyr::group_vars(from)
-  group_by(as(ungroup(from), "DataFrame"), !!!rlang::syms(grps))
+    grps <- dplyr::group_vars(from)
+    group_by(methods::as(ungroup(from), "DataFrame"), !!!rlang::syms(grps))
 })
 
 setAs("grouped_df", "GroupedDataFrame", function(from) {
-  grps <- dplyr::group_vars(from)
-  group_by(as(ungroup(from), "DataFrame"), !!!rlang::syms(grps))
+    grps <- dplyr::group_vars(from)
+    group_by(methods::as(ungroup(from), "DataFrame"), !!!rlang::syms(grps))
 })
 
 setAs("DFrame", "GroupedDataFrame", function(from) {
@@ -151,22 +157,28 @@ setAs("DFrame", "GroupedDataFrame", function(from) {
 })
 
 setAs("GroupedDataFrame", "DFrame", function(from) {
-  ungroup(from)
+    ungroup(from)
 })
 
 setAs("GroupedDataFrame", "data.frame", function(from) {
-  as.data.frame(ungroup(from))
+    as.data.frame(ungroup(from))
 })
 
 setAs("data.frame", "GroupedDataFrame", function(from) {
-  methods::as(methods::as(from, "DFrame"), "GroupedDataFrame")
+    methods::as(methods::as(from, "DFrame"), "GroupedDataFrame")
 })
 
-as.data.frame.GroupedDataFrame <- function(x, row.names=NULL, optional=FALSE,
-                                           make.names=TRUE, ...,
-                                           stringsAsFactors=FALSE) {
-  as.data.frame(methods::as(x, "DFrame"))
+as.data.frame.GroupedDataFrame <- function(x,
+    row.names = NULL,
+    optional = FALSE,
+    make.names = TRUE,
+    ...,
+    stringsAsFactors = FALSE) {
+    as.data.frame(methods::as(x, "DFrame"))
 }
 
-setMethod("as.data.frame", "GroupedDataFrame", as.data.frame.GroupedDataFrame)
-
+setMethod(
+    "as.data.frame",
+    "GroupedDataFrame",
+    as.data.frame.GroupedDataFrame
+)

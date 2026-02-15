@@ -10,54 +10,41 @@ format.DataFrame <- function(x, ...) {
 #' @importFrom rlang quos eval_tidy
 #' @export
 filter.DataFrame <- function(.data, ..., .preserve = FALSE) {
-  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  for (f in seq_along(FNS)) {
-    .data <- with(
-      .data,
-      base::subset(
-        .data,
-        rlang::eval_tidy(FNS[[f]])
-      )
-    )
-  }
-  .data
+    FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+    for (f in seq_along(FNS)) {
+        .data <- with(.data, base::subset(.data, rlang::eval_tidy(FNS[[f]])))
+    }
+    .data
 }
 
 #' @inherit dplyr::filter
 #' @importFrom rlang quos eval_tidy
 #' @export
 filter.GroupedDataFrame <- function(.data, ..., .preserve = FALSE) {
-  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  groupvars <- group_vars(.data)
-  if (length(groupvars) > 0L) {
-    groups <- group_data(.data)
-    split_data <- lapply(seq_len(nrow(groups)), function(x) {
-      .data_grp <- .data[groups$.rows[x][[1]], , drop = FALSE]
-      for (f in seq_along(FNS)) {
-        .data_grp <- with(
-          .data_grp,
-          S4Vectors::subset(
-            .data_grp,
-            rlang::eval_tidy(FNS[[f]])
-          )
-        )
-      }
-      .data_grp
-    })
-    res <- group_by(do.call(rbind, split_data), !!!groupvars)
-  } else {
-    for (f in seq_along(FNS)) {
-      .data <- with(
-        .data,
-        base::subset(
-          .data,
-          rlang::eval_tidy(FNS[[f]])
-        )
-      )
+    FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+    groupvars <- group_vars(.data)
+    if (length(groupvars) > 0L) {
+        groups <- group_data(.data)
+        split_data <- lapply(seq_len(nrow(groups)), function(x) {
+            .data_grp <- .data[groups$.rows[x][[1]], , drop = FALSE]
+            for (f in seq_along(FNS)) {
+                .data_grp <- with(
+                    .data_grp,
+                    S4Vectors::subset(.data_grp, rlang::eval_tidy(FNS[[f]]))
+                )
+            }
+            .data_grp
+        })
+        res <- group_by(do.call(rbind, split_data), !!!groupvars)
+    } else {
+        for (f in seq_along(FNS)) {
+            .data <- with(
+                .data,
+                base::subset(.data, rlang::eval_tidy(FNS[[f]]))
+            )
+        }
+        res <- .data
     }
-    res <- .data
-  }
-
 }
 
 #' @inherit dplyr::mutate
@@ -70,25 +57,25 @@ mutate.DataFrame <- function(.data, ...) {
 
 #' @export
 mutate.GroupedDataFrame <- function(.data, ...) {
-  FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-  groupvars <- group_vars(.data)
-  if (length(groupvars) > 0L) {
-    groups <- group_data(.data)
-    split_data <- lapply(seq_len(nrow(groups)), function(x) {
-      idx <- groups$.rows[x][[1]]
-      if (length(idx) == 0) {
-        NULL
-      } else {
-        .data_grp <- .data[idx, , drop = FALSE]
-        mutate_internal(.data_grp, FNS, rlang::quos(...))
-      }
-    })
-    res <- do.call(rbind, split_data)
-  } else {
-    res <- mutate_internal(.data, FNS, rlang::quos(...))
-  }
-  # regroup
-  group_by(res, !!!groupvars)
+    FNS <- lapply(rlang::quos(...), rlang::quo_squash)
+    groupvars <- group_vars(.data)
+    if (length(groupvars) > 0L) {
+        groups <- group_data(.data)
+        split_data <- lapply(seq_len(nrow(groups)), function(x) {
+            idx <- groups$.rows[x][[1]]
+            if (length(idx) == 0) {
+                NULL
+            } else {
+                .data_grp <- .data[idx, , drop = FALSE]
+                mutate_internal(.data_grp, FNS, rlang::quos(...))
+            }
+        })
+        res <- do.call(rbind, split_data)
+    } else {
+        res <- mutate_internal(.data, FNS, rlang::quos(...))
+    }
+    # regroup
+    group_by(res, !!!groupvars)
 }
 
 #' @keywords internal
@@ -102,10 +89,8 @@ mutate_internal <- function(.data, FUNS, quos) {
     ## excluding data that was already here.
     ## this is important for capturing RHS variables
     scope_env <- rlang::quo_get_env(quos[[1]])
-    for (n in setdiff(
-        ls(scope_env, all.names = TRUE),
-        c("...", ls(all.names = TRUE))
-    )) {
+    for (n in setdiff(ls(scope_env, all.names = TRUE),
+                c("...", ls(all.names = TRUE)))) {
         assign(n, get(n, scope_env), pos = as.environment(-1L))
     }
     EXPRS <- lapply(names(FUNS), function(x) {
@@ -117,14 +102,10 @@ mutate_internal <- function(.data, FUNS, quos) {
             sprintf("%s <- c(%s)", x, paste0(FUNS_expl, collapse = ", "))
         }
     })
-    S4Vectors::within(
-        ungroup(.data),
-        eval(
-            parse(
-                text = paste0(unlist(EXPRS), collapse = "\n")
-            )
-        )
-    )
+    S4Vectors::within(ungroup(.data), eval(parse(text = paste0(
+        unlist(EXPRS),
+        collapse = "\n"
+    ))))
 }
 
 #' @inherit dplyr::tbl_vars
@@ -139,15 +120,12 @@ tbl_vars.DataFrame <- function(x) {
 #' @export
 select.DataFrame <- function(.data, ...) {
     dotnames <- names(rlang::exprs(...))
-    .data <- base::subset(
-        .data,
+    .data <- base::subset(.data,
         select = unlist(lapply(
             rlang::quos(...),
             function(x) {
                 rlang::eval_tidy(rlang::quo_squash(x))
-            }
-        ))
-    )
+            })))
     if (any(dotnames != "")) {
         non_empty <- which(dotnames != "")
         for (ne in non_empty) {
@@ -162,10 +140,9 @@ select.DataFrame <- function(.data, ...) {
 #' @keywords internal
 .rename <- function(x, ...) {
     FNS <- lapply(rlang::quos(...), rlang::quo_squash)
-    methods::getMethod(
-        "rename",
-        "Vector",
-        where = asNamespace("S4Vectors")
+    methods::getMethod("rename",
+                "Vector",
+                where = asNamespace("S4Vectors")
     )(x, rlang::set_names(names(FNS), unlist(FNS)))
 }
 
@@ -181,45 +158,43 @@ setMethod("rename", "DataFrame", .rename)
 #' @param ... columns to be renamed with syntax `new = old`
 #' @return Deprecated - use `rename`
 #' @export
+#' @examples
+#' # see rename
+#'
 rename2 <- function(.data, ...) {
-    .Deprecated(
-        "rename",
-        msg = "DFplyr now properly supports rename with NSE syntax"
-    )
+    .Deprecated("rename",
+                msg = "DFplyr now properly supports rename with NSE syntax")
 }
 
 #' @inherit dplyr::count
 #' @importFrom rlang quos quo_squash enquo
 #' @export
-count.DataFrame <- function(
-        x,
-        ...,
-        wt = NULL,
-        sort = FALSE,
-        name = "n",
-        .drop = group_by_drop_default(x)) {
+count.DataFrame <- function(x,
+    ...,
+    wt = NULL,
+    sort = FALSE,
+    name = "n",
+    .drop = group_by_drop_default(x)) {
     if (!inherits(x, "DataFrame")) {
-        return(
-            dplyr::count(
-                x,
-                ...,
-                wt = !!rlang::enquo(wt),
-                sort = sort,
-                name = name,
-                .drop = .drop
-            )
-        )
+        return(dplyr::count(
+            x,
+            ...,
+            wt = !!rlang::enquo(wt),
+            sort = sort,
+            name = name,
+            .drop = .drop
+        ))
     }
 
     groupvars <- group_vars(x)
-    EXPRS <- lapply(rlang::quos(...), function(x) rlang::quo_squash(x))
+    EXPRS <- lapply(rlang::quos(...), function(x) {
+        rlang::quo_squash(x)
+    })
     if (length(groupvars) > 0L) {
         groups <- group_data(x)
         if (!length(EXPRS)) {
-            RET <- select(
-                mutate(groups, n = lengths(.data[[".rows"]])),
-                -".rows"
-            )
+            RET <- select(mutate(groups,
+                n = lengths(.data[[".rows"]])), -".rows")
             names(RET)[ncol(RET)] <- name
             RET <- RET[RET[[name]] != 0, ]
             return(methods::as(RET, "DataFrame"))
@@ -305,7 +280,7 @@ group_data.DataFrame <- function(.data) {
 
 #' @inherit dplyr::group_vars title description
 #' @importFrom rlang as_string
-#' @param x a [S4Vectors::DataFrame()], likely grouped
+#' @param x a `GroupedDataFrame`, likely already grouped
 #' @return the grouping variables as a character vector
 #' @export
 group_vars.GroupedDataFrame <- function(x) {
@@ -317,9 +292,12 @@ group_vars.GroupedDataFrame <- function(x) {
     }
 }
 
+#' @inherit dplyr::group_vars title description
+#' @param x a [S4Vectors::DataFrame()], not already grouped
+#' @return the grouping variables as a character vector
 #' @export
 group_vars.DataFrame <- function(x) {
-  NULL
+    NULL
 }
 
 #' @inherit dplyr::group_by
@@ -330,10 +308,9 @@ group_by.DataFrame <- function(.data,
     add = FALSE,
     .drop = group_by_drop_default(.data)) {
     if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
-        groupvars <- lapply(
-            rlang::quos(...),
-            function(x) rlang::as_string(rlang::quo_squash(x))
-        )
+        groupvars <- lapply(rlang::quos(...), function(x) {
+            rlang::as_string(rlang::quo_squash(x))
+        })
         for (v in groupvars) {
             if (!utils::hasName(.data, v)) {
                 stop("Column '", v, "' not found in data")
@@ -349,12 +326,8 @@ group_by.DataFrame <- function(.data,
         groups <- split(as.integer(flagged$rowid), flagged$flag)
         uniques <- as.data.frame(uniques)
         uniques$.rows <- unname(groups)
-        groupdata <- uniques[
-            with(
-                uniques,
-                do.call(order, rlang::syms(groupvars))
-            ),
-        ]
+        groupdata <- uniques[with(uniques,
+                do.call(order, rlang::syms(groupvars))), ]
         if (!inherits(groupdata, "data.frame")) {
             return(.data)
         }
@@ -364,51 +337,47 @@ group_by.DataFrame <- function(.data,
     .data
 }
 
+#' @inherit dplyr::group_by
 #' @export
 group_by.GroupedDataFrame <- function(.data,
-                                      ...,
-                                      add = FALSE,
-                                      .drop = group_by_drop_default(.data)) {
-  if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
-    groupvars <- lapply(
-      rlang::quos(...),
-      function(x) rlang::as_string(rlang::quo_squash(x))
-    )
-    for (v in groupvars) {
-      if (!utils::hasName(.data, v)) {
-        stop("Column '", v, "' not found in data")
-      }
+    ...,
+    add = FALSE,
+    .drop = group_by_drop_default(.data)) {
+    if (is.null(group_data(.data)) || nrow(group_data(.data)) == 1L) {
+        groupvars <- lapply(rlang::quos(...), function(x) {
+            rlang::as_string(rlang::quo_squash(x))
+        })
+        for (v in groupvars) {
+            if (!utils::hasName(.data, v)) {
+                stop("Column '", v, "' not found in data")
+            }
+        }
+        uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
+        flagged <- S4Vectors::merge(
+            mutate(.data, rowid = seq_len(nrow(.data))),
+            mutate(uniques, flag = seq_len(nrow(uniques))),
+            by = unlist(groupvars),
+            sort = FALSE
+        )
+        groups <- split(as.integer(flagged$rowid), flagged$flag)
+        uniques <- as.data.frame(uniques)
+        uniques$.rows <- unname(groups)
+        groupdata <- uniques[with(uniques,
+                do.call(order, rlang::syms(groupvars))), ]
+        if (!inherits(groupdata, "data.frame")) {
+            return(.data)
+        }
+        rownames(groupdata) <- seq_len(nrow(groupdata))
+        .data <- set_group_data(.data, groupdata, .drop)
+    } else {
+        oldgroupvars <- group_vars(.data)
+        newgroupvars <- lapply(rlang::quos(...), function(x) {
+            rlang::as_string(rlang::quo_squash(x))
+        })
+        .data <- group_by(methods::as(ungroup(.data), "DFrame"),
+                !!!rlang::syms(union(oldgroupvars, newgroupvars)))
     }
-    uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
-    flagged <- S4Vectors::merge(
-      mutate(.data, rowid = seq_len(nrow(.data))),
-      mutate(uniques, flag = seq_len(nrow(uniques))),
-      by = unlist(groupvars),
-      sort = FALSE
-    )
-    groups <- split(as.integer(flagged$rowid), flagged$flag)
-    uniques <- as.data.frame(uniques)
-    uniques$.rows <- unname(groups)
-    groupdata <- uniques[
-      with(
-        uniques,
-        do.call(order, rlang::syms(groupvars))
-      ),
-    ]
-    if (!inherits(groupdata, "data.frame")) {
-      return(.data)
-    }
-    rownames(groupdata) <- seq_len(nrow(groupdata))
-    .data <- set_group_data(.data, groupdata, .drop)
-  } else {
-    oldgroupvars <- group_vars(.data)
-    newgroupvars <- lapply(
-      rlang::quos(...),
-      function(x) rlang::as_string(rlang::quo_squash(x))
-    )
-    .data <- group_by(methods::as(ungroup(.data), "DFrame"), !!!rlang::syms(union(oldgroupvars, newgroupvars)))
-  }
-  .data
+    .data
 }
 
 #' Set and Get Group Data on a DataFrame
@@ -446,7 +415,7 @@ get_group_data <- function(x) {
 ungroup.GroupedDataFrame <- function(x, ...) {
     res <- set_group_data(x, NULL)
     if (inherits(res, "GroupedDataFrame")) {
-      class(res) <- "DFrame"
+        class(res) <- "DFrame"
     }
     res
 }
@@ -454,13 +423,15 @@ ungroup.GroupedDataFrame <- function(x, ...) {
 #' @inherit dplyr::ungroup
 #' @export
 ungroup.DataFrame <- function(x, ...) {
-  x
+    x
 }
 
 #' @inherit dplyr::arrange
 #' @export
 arrange.DataFrame <- function(.data, ...) {
-    EXPRS <- lapply(rlang::quos(...), function(x) rlang::quo_squash(x))
+    EXPRS <- lapply(rlang::quos(...), function(x) {
+        rlang::quo_squash(x)
+    })
 
     groupvars <- group_vars(.data)
     if (length(groupvars) > 0L) {
@@ -496,7 +467,10 @@ distinct.DataFrame <- function(.data, ..., .keep_all = FALSE) {
 #' d <- S4Vectors::DataFrame(mtcars)
 #' pull(d, cyl)
 #'
-pull.DataFrame <- function(.data, var = -1, name = NULL, ...) {
+pull.DataFrame <- function(.data,
+    var = -1,
+    name = NULL,
+    ...) {
     var <- tidyselect::vars_pull(names(.data), !!rlang::enquo(var))
     name <- rlang::enquo(name)
     if (rlang::quo_is_null(name)) {
@@ -542,7 +516,10 @@ slice.DataFrame <- function(.data, ..., .preserve = FALSE) {
 
 #' @inherit dplyr::tally
 #' @export
-tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = NULL) {
+tally.DataFrame <- function(x,
+    wt = NULL,
+    sort = FALSE,
+    name = NULL) {
     name <- .check_n_name(name, group_vars(x))
     out <- .tally_n(x, {{ wt }}, name)
     if (sort) {
@@ -554,11 +531,10 @@ tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = NULL) {
 
 #' @importFrom rlang caller_arg caller_env inform
 #' @keywords internal
-.check_n_name <- function(
-        name,
-        vars,
-        arg = rlang::caller_arg(name),
-        call = rlang::caller_env()) {
+.check_n_name <- function(name,
+    vars,
+    arg = rlang::caller_arg(name),
+    call = rlang::caller_env()) {
     if (is.null(name)) {
         name <- .n_name(vars)
         if (name != "n") {
@@ -590,10 +566,9 @@ tally.DataFrame <- function(x, wt = NULL, sort = FALSE, name = NULL) {
 .tally_n <- function(x, wt, name) {
     wt <- rlang::enquo(wt)
     if (rlang::is_call(rlang::quo_get_expr(wt), "n", n = 0)) {
-        rlang::warn(c(
-            "`wt = n()` is deprecated",
-            i = "You can now omit the `wt` argument"
-        ))
+        rlang::warn(
+        c("`wt = n()` is deprecated", i = "You can now omit the `wt` argument")
+        )
         wt <- rlang::quo(NULL)
     }
     if (rlang::quo_is_null(wt)) {
@@ -650,18 +625,19 @@ group_intersect <- function(x, new) {
 
 .grp_subset <- function(x, i, j, ..., drop = FALSE) {
     if (is.null(get_group_data(x))) {
-      return(S4Vectors::subset(x, i, j, ..., drop = drop))
+        return(S4Vectors::subset(x, i, j, ..., drop = drop))
     }
     if (missing(j)) {
-      out <- ungroup(x)[i, ]
+        out <- ungroup(x)[i, ]
     } else {
-      out <- ungroup(x)[i, j] #S4Vectors::subset(ungroup(x), i, j, drop = drop)
+        out <- ungroup(x)[i, j]
     }
     if (drop) {
         out
     } else {
         groups <- group_intersect(x, out)
-        if ((missing(i) || nargs() == 2) && identical(groups, group_vars(x))) {
+        if ((missing(i) ||
+            nargs() == 2) && identical(groups, group_vars(x))) {
             out
         } else {
             group_by(out, !!!groups)
@@ -681,14 +657,9 @@ group_intersect <- function(x, new) {
 setMethod("[", "GroupedDataFrame", .grp_subset)
 
 .grp_bindROWS <- function(x, objects = list()) {
-    combined <- methods::getMethod(
-        "bindROWS",
-        "DataFrame",
-        where = asNamespace("S4Vectors")
-    )(
-        x,
-        objects
-    )
+    combined <- methods::getMethod("bindROWS",
+            "DataFrame",
+            where = asNamespace("S4Vectors"))(x, objects)
     if (is.null(group_data(x))) {
         return(combined)
     }

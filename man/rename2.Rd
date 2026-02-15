@@ -17,3 +17,7 @@ Deprecated - use \code{rename}
 \description{
 Rename Columns of a DataFrame (deprecated)
 }
+\examples{
+# see rename
+
+}
