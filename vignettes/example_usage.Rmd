@@ -106,6 +106,14 @@ or calculating the `length()` of the `nl` column cells as `length_nl`
 mutate(d, length_nl = lengths(nl))
 ```
 
+The to-be-created columns can reference other columns that appear only in the 
+call being made and not in the input data, e.g. the `gear2` column can be 
+referenced in a subsequent calculation
+
+```{r "subsequent"}
+mutate(d, gear2 = gear * 2, later = gear2 * 3)
+```
+
 Transformations can involve S4-related functions, such as extracting the 
 `seqnames()`, `strand()`, and `end()` of the `grX` column
 

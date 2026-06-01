@@ -81,9 +81,6 @@ mutate.GroupedDataFrame <- function(.data, ...) {
 #' @keywords internal
 #' @importFrom rlang eval_tidy quo_get_env
 mutate_internal <- function(.data, FUNS, quos) {
-    op <- options("useFancyQuotes")
-    on.exit(options(op))
-    options(useFancyQuotes = FALSE)
 
     ## hack: inject the local env with the scoped data,
     ## excluding data that was already here.
@@ -94,8 +91,8 @@ mutate_internal <- function(.data, FUNS, quos) {
         assign(n, get(n, scope_env), pos = as.environment(-1L))
     }
 
-    ## Here's a suggestion. I think it will handle the ungrouping OK and
-    ## should pass the columns consecutively
+    ## columns are processed consecutively, and so can depend on earlier
+    ## columns created via mutations, not only initially available in the data
     Reduce(
         function(df, nm) {
             val <- rlang::eval_tidy(FUNS[[nm]], data = as.list(df))
@@ -106,20 +103,6 @@ mutate_internal <- function(.data, FUNS, quos) {
         init = ungroup(.data)
     )
 
-    ## Original process. Just commented out for convenience
-    # EXPRS <- lapply(names(FUNS), function(x) {
-    #     FUNS_expl <- with(.data, rlang::eval_tidy(FUNS[[x]]))
-    #     FUNS_obj <- with(.data, eval(rlang::eval_tidy(FUNS[[x]])))
-    #     if (!inherits(FUNS_obj, "numeric")) {
-    #         sprintf("%s <- %s", x, paste0(deparse(FUNS_expl), collapse = ""))
-    #     } else {
-    #         sprintf("%s <- c(%s)", x, paste0(FUNS_expl, collapse = ", "))
-    #     }
-    # })
-    # S4Vectors::within(ungroup(.data), eval(parse(text = paste0(
-    #     unlist(EXPRS),
-    #     collapse = "\n"
-    # ))))
 }
 
 #' @inherit dplyr::tbl_vars
