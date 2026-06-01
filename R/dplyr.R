@@ -331,8 +331,10 @@ group_by.DataFrame <- function(.data,
             }
         }
         uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
+        i <- nrow(.data)
         flagged <- S4Vectors::merge(
-            mutate(.data, rowid = seq_len(nrow(.data))),
+            mutate(.data, rowid = seq_len(i)),
+            # mutate(.data, rowid = seq_len(nrow(.data))),
             mutate(uniques, flag = seq_len(nrow(uniques))),
             by = unlist(groupvars),
             sort = FALSE
