@@ -11,6 +11,12 @@ test_that("mutate works with regular columns", {
     expect_true("newvar2" %in% names(m))
     expect_identical(m$newvar2, mtcars$cyl^2)
 
+    carletters <- c(LETTERS, LETTERS[1:6])
+    m <- mutate(d, newvar3 = paste0(carletters, cyl))
+    expect_s4_class(m, "DataFrame")
+    expect_true("newvar3" %in% names(m))
+    expect_identical(m$newvar3, paste0(carletters, mtcars$cyl))
+
     m <- mutate_at(d, vars(starts_with("c")), ~ .^2)
     expect_s4_class(m, "DataFrame")
     expect_identical(names(m), names(d))
@@ -33,4 +39,38 @@ test_that("mutate works with S4 columns", {
     expect_true("chr" %in% names(m))
     expect_s4_class(m$chr, "Rle")
     expect_identical(m$chr, IRanges::RleList(factor(rep("chrX", 32)))[[1]])
+})
+
+test_that("mutate adds columns sequentially", {
+  d <- S4Vectors::DataFrame(mtcars)
+  m <- mutate(d, newvar = cyl * 2, newervar = newvar + am)
+  expect_s4_class(m, "DataFrame")
+  expect_true("newvar" %in% names(m))
+  expect_true("newervar" %in% names(m))
+  expect_identical(m$newvar, mtcars$cyl * 2)
+  expect_identical(m$newervar, mtcars$am + mtcars$cyl * 2)
+})
+
+
+test_that("sequential mutation supports groups", {
+  d <- S4Vectors::DataFrame(mtcars) |>
+    group_by(gear)
+  m <- mutate(d,
+              newvar = cyl * 2,
+              avggear = mean(gear) + 1,
+              newervar = vs + newvar + avggear)
+  expect_s4_class(m, "DataFrame")
+  expect_s4_class(m, "GroupedDataFrame")
+  expect_true("newvar" %in% names(m))
+  expect_true("avggear" %in% names(m))
+  expect_true("newervar" %in% names(m))
+
+  # realign rows after grouping
+  mm <- m[rownames(mtcars), ]
+  expect_identical(mm$newvar, mtcars$cyl * 2)
+  expect_identical(mm$avggear, mtcars$gear + 1)
+  expect_identical(mm$newervar,
+                   mtcars$vs +
+                     (mtcars$gear + 1) +
+                     (mtcars$cyl * 2))
 })

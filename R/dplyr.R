@@ -81,9 +81,6 @@ mutate.GroupedDataFrame <- function(.data, ...) {
 #' @keywords internal
 #' @importFrom rlang eval_tidy quo_get_env
 mutate_internal <- function(.data, FUNS, quos) {
-    op <- options("useFancyQuotes")
-    on.exit(options(op))
-    options(useFancyQuotes = FALSE)
 
     ## hack: inject the local env with the scoped data,
     ## excluding data that was already here.
@@ -93,19 +90,19 @@ mutate_internal <- function(.data, FUNS, quos) {
                 c("...", ls(all.names = TRUE)))) {
         assign(n, get(n, scope_env), pos = as.environment(-1L))
     }
-    EXPRS <- lapply(names(FUNS), function(x) {
-        FUNS_expl <- with(.data, rlang::eval_tidy(FUNS[[x]]))
-        FUNS_obj <- with(.data, eval(rlang::eval_tidy(FUNS[[x]])))
-        if (!inherits(FUNS_obj, "numeric")) {
-            sprintf("%s <- %s", x, paste0(deparse(FUNS_expl), collapse = ""))
-        } else {
-            sprintf("%s <- c(%s)", x, paste0(FUNS_expl, collapse = ", "))
-        }
-    })
-    S4Vectors::within(ungroup(.data), eval(parse(text = paste0(
-        unlist(EXPRS),
-        collapse = "\n"
-    ))))
+
+    ## columns are processed consecutively, and so can depend on earlier
+    ## columns created via mutations, not only initially available in the data
+    Reduce(
+        function(df, nm) {
+            val <- rlang::eval_tidy(FUNS[[nm]], data = as.list(df))
+            df[[nm]] <- val
+            df
+        },
+        x = names(FUNS),
+        init = ungroup(.data)
+    )
+
 }
 
 #' @inherit dplyr::tbl_vars
@@ -317,8 +314,10 @@ group_by.DataFrame <- function(.data,
             }
         }
         uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
+        i <- nrow(.data)
         flagged <- S4Vectors::merge(
-            mutate(.data, rowid = seq_len(nrow(.data))),
+            mutate(.data, rowid = seq_len(i)),
+            # mutate(.data, rowid = seq_len(nrow(.data))),
             mutate(uniques, flag = seq_len(nrow(uniques))),
             by = unlist(groupvars),
             sort = FALSE

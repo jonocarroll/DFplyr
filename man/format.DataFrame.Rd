@@ -29,7 +29,8 @@ An object of similar structure to \code{x} containing character
   alignment in the collapsed strings.
 }
 \description{
-Format an \R object for pretty printing.
+Format an \R object for pretty printing, notably encoding vector or
+  column elements into a common format.
 }
 \details{
 \code{format} is a generic function.  Apart from the methods described

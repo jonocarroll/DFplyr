@@ -55,6 +55,7 @@ Useful links:
 Other contributors:
 \itemize{
   \item Pierre-Paul Axisa [contributor]
+  \item Stevie Pederson [contributor]
 }
 
 }
