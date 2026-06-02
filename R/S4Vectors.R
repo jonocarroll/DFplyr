@@ -18,7 +18,8 @@
     )
     ## add group information
     if (!is.null(group_data(object)) &
-        nrow(group_data(object)) > 1L) {
+        # nrow(group_data(object)) > 1L) {
+        nrow(group_data(object)) >= 1L) { ## I'm not sure why we need > 1?
         cat("Groups: ", toString(group_vars(object)), "\n")
     }
     if (x_nrow != 0L && x_ncol != 0L) {
