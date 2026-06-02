@@ -318,20 +318,37 @@ summarise.DataFrame <- function(.data, ...) {
 
     if (length(groupvars) > 0L) {
         groups <- group_data(.data)
-        split_data <- lapply(seq_len(nrow(groups)), function(xx) {
-            .data_grp <- .data[groups$.rows[xx][[1]], , drop = FALSE]
-            tbl_grp <- lapply(FNS, function(xx) {
-                with(.data_grp, rlang::eval_tidy(xx))
-            })
-            cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
-        })
+        split_data <- lapply(
+            seq_len(nrow(groups)),
+            \(i) {
+                .data_grp <- .data[groups$.rows[i][[1]], , drop = FALSE]
+                tbl_grp <- lapply(FNS, \(f) with(.data_grp, rlang::eval_tidy(f)))
+                grp_list <- lapply(groups[-ncol(groups)], \(y) y[i])
+                cbind(
+                    as.data.frame(grp_list, check.names = FALSE),
+                    as.data.frame(tbl_grp, check.names = FALSE)
+                )
+            }
+        )
+
+        ## The original code will produce strange column names if there is only
+        ## one group
+        # split_data <- lapply(seq_len(nrow(groups)), function(xx) {
+        #     .data_grp <- .data[groups$.rows[xx][[1]], , drop = FALSE]
+        #     tbl_grp <- lapply(FNS, function(xx) {
+        #         with(.data_grp, rlang::eval_tidy(xx))
+        #     })
+        #     cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
+        # })
         RET <- do.call(rbind, split_data)
     } else {
         RET <- lapply(FNS, function(xx) {
             with(.data, eval(xx))
         })
     }
+    nm <- names(RET)
     RET <- methods::as(RET, "DataFrame")
+    colnames(RET) <- nm
     RET
 }
 
