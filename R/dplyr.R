@@ -200,6 +200,13 @@ count.DataFrame <- function(x,
         ))
     }
 
+    ## Implement the wt argument for DataFrame objects
+    ## This will currently error if an unquoted column name is passed
+    ## TODO: Fix handling of unquoted column names
+    if (!is.null(wt)) {
+        wt <- match.arg(wt, colnames(x))
+        stopifnot(is.numeric(x[[wt]]))
+    }
     groupvars <- group_vars(x)
     EXPRS <- lapply(rlang::quos(...), function(x) {
         rlang::quo_squash(x)
@@ -207,6 +214,7 @@ count.DataFrame <- function(x,
     if (length(groupvars) > 0L) {
         groups <- group_data(x)
         if (!length(EXPRS)) {
+            ## Need to handle wt here
             RET <- select(mutate(groups,
                 n = lengths(.data[[".rows"]])), -".rows")
             names(RET)[ncol(RET)] <- name
@@ -225,14 +233,15 @@ count.DataFrame <- function(x,
                 grp_subset <- lapply(groups[-ncol(groups)], \(y) y[i])
                 cbind(
                     as.data.frame(grp_subset, check.names = FALSE),
-                    .count_internal(x[groups$.rows[[i]],], EXPRS)
+                    .count_internal(x[groups$.rows[[i]],], EXPRS, wt)
                 )
             }
         )
         nm <- colnames(split_data[[1]])
         RET <- methods::as(do.call(rbind, split_data), "DataFrame")
-        ## I assume this is what we want?
-        RET <- group_by(RET, !!!rlang::syms(groupvars)) # Restore groups
+        ## I assume we want groups maintained in the output?
+        if (.drop) groupvars <- groupvars[-length(groupvars)]
+        RET <- group_by(RET, !!!rlang::syms(groupvars), .drop = .drop) # Restore groups
 
         ## The original code
         # split_data <- lapply(seq_len(nrow(groups)), function(xx) {
@@ -241,13 +250,14 @@ count.DataFrame <- function(x,
         #     cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
         # })
         # RET <- methods::as(do.call(rbind, split_data), "DataFrame")
+
     } else {
 
         ## The previous approach which will:
         ## 1. Not respect column names
         ## 2. Coerce columns to different data types (e.g. factor, Rle etc)
         # RET <- methods::as(with(x, do.call(table, EXPRS)), "DataFrame")
-        RET <- .count_internal(x, EXPRS)
+        RET <- .count_internal(x, EXPRS, wt)
 
     }
 
@@ -261,16 +271,23 @@ count.DataFrame <- function(x,
 }
 
 #' @importFrom rlang !!!
-.count_internal <- function(x, EXPRS) {
+.count_internal <- function(x, EXPRS, wt) {
     x <- ungroup(x)
     ## Avoid the existing do.call by forming a list & retaining the names
     x_as_list <- as.list(select(x, !!!rlang::syms(EXPRS)))
     nm <- names(x_as_list)
-    RET <- methods::as(table(x_as_list), "DataFrame")
-    names(RET)[-ncol(RET)] <- nm # Restore names
-    ## The call to table will coerce to factors, Rle & other unexpected classes
-    ## Return them back to their original type
-    RET[nm] <- lapply(nm, \(i) methods::as(RET[[i]], class(x_as_list[[i]])))
+    if (is.null(wt)) {
+        RET <- methods::as(table(x_as_list), "DataFrame")
+        names(RET)[-ncol(RET)] <- nm # Restore original names
+        ## The call to table will coerce to factors, Rle & other unexpected classes
+        ## Return them back to their original type
+        RET[nm] <- lapply(nm, \(i) methods::as(RET[[i]], class(x_as_list[[i]])))
+    } else {
+        x_grouped <- group_by(x, !!!rlang::syms(EXPRS))
+        nm <- vapply(EXPRS, as.character, character(1))
+        RET <- summarise(x_grouped, n = sum(!!sym(wt)))
+        names(RET)[-ncol(RET)] <- nm
+    }
     RET
 
 }
