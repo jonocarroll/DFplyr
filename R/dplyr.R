@@ -181,7 +181,7 @@ rename2 <- function(.data, ...) {
 }
 
 #' @inherit dplyr::count
-#' @importFrom rlang quos quo_squash enquo
+#' @importFrom rlang quos quo_squash enquo !! !!! sym
 #' @export
 count.DataFrame <- function(x,
     ...,
@@ -213,23 +213,67 @@ count.DataFrame <- function(x,
             RET <- RET[RET[[name]] != 0, ]
             return(methods::as(RET, "DataFrame"))
         }
-        split_data <- lapply(seq_len(nrow(groups)), function(xx) {
-            .data_grp <- x[groups$.rows[xx][[1]], , drop = FALSE]
-            tbl_grp <- with(.data_grp, do.call(table, EXPRS))
-            cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
-        })
+
+        ## This process retains & respects all original column names
+        split_data <- lapply(
+            seq_len(nrow(groups)),
+            \(i) {
+                ## Using lapply ensures a list not a vector, which can easily
+                ## be coerced to a data.frame. Sometimes choosing a single
+                ## column will be coerced to a vector, e.g. x[1,1] which
+                ## leads to unexpected output structures
+                grp_subset <- lapply(groups[-ncol(groups)], \(y) y[i])
+                cbind(
+                    as.data.frame(grp_subset, check.names = FALSE),
+                    .count_internal(x[groups$.rows[[i]],], EXPRS)
+                )
+            }
+        )
+        nm <- colnames(split_data[[1]])
         RET <- methods::as(do.call(rbind, split_data), "DataFrame")
+        ## I assume this is what we want?
+        RET <- group_by(RET, !!!rlang::syms(groupvars)) # Restore groups
+
+        ## The original code
+        # split_data <- lapply(seq_len(nrow(groups)), function(xx) {
+        #     .data_grp <- x[groups$.rows[xx][[1]], , drop = FALSE]
+        #     tbl_grp <- with(.data_grp, do.call(table, EXPRS))
+        #     cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
+        # })
+        # RET <- methods::as(do.call(rbind, split_data), "DataFrame")
     } else {
-        RET <- methods::as(with(x, do.call(table, EXPRS)), "DataFrame")
+
+        ## The previous approach which will:
+        ## 1. Not respect column names
+        ## 2. Coerce columns to different data types (e.g. factor, Rle etc)
+        # RET <- methods::as(with(x, do.call(table, EXPRS)), "DataFrame")
+        RET <- .count_internal(x, EXPRS)
+
     }
 
     names(RET)[ncol(RET)] <- name
     RET <- RET[RET[[name]] != 0, ]
     RET <- RET[with(RET, do.call(order, EXPRS)), ]
+    ## Is this needed or useful?
+    if (sort) RET <- arrange(RET, desc(!!sym("n")))
 
     RET
 }
 
+#' @importFrom rlang !!!
+.count_internal <- function(x, EXPRS) {
+    x <- ungroup(x)
+    ## Avoid the existing do.call by forming a list & retaining the names
+    x_as_list <- as.list(select(x, !!!rlang::syms(EXPRS)))
+    nm <- names(x_as_list)
+    RET <- methods::as(table(x_as_list), "DataFrame")
+    names(RET)[-ncol(RET)] <- nm # Restore names
+    ## The call to table will coerce to factors, Rle & other unexpected classes
+    ## Return them back to their original type
+    RET[nm] <- lapply(nm, \(i) methods::as(RET[[i]], class(x_as_list[[i]])))
+    RET
+
+}
 
 #' @inherit dplyr::group_by_drop_default
 #' @export
@@ -331,16 +375,20 @@ group_by.DataFrame <- function(.data,
             }
         }
         uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
-        i <- nrow(.data)
+        .nr <- nrow(.data) # This needs to not match an existing column
         flagged <- S4Vectors::merge(
-            mutate(.data, rowid = seq_len(i)),
+            mutate(.data, rowid = seq_len(.nr)),
             # mutate(.data, rowid = seq_len(nrow(.data))),
             mutate(uniques, flag = seq_len(nrow(uniques))),
             by = unlist(groupvars),
             sort = FALSE
         )
         groups <- split(as.integer(flagged$rowid), flagged$flag)
-        uniques <- as.data.frame(uniques)
+
+        ## Enforce respecting colnames after the call to as.data.frame
+        ## Setting optional = TRUE may less safe though, but explicitly
+        ## setting check.names = FALSE is not implemented
+        uniques <- as.data.frame(uniques, optional = TRUE)
         uniques$.rows <- unname(groups)
         groupdata <- uniques[with(uniques,
                 do.call(order, rlang::syms(groupvars))), ]
