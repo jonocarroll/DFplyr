@@ -127,3 +127,40 @@ test_that("Regrouping extends groups", {
     expect_identical(group_vars(single), c("cyl", "am"))
     expect_identical(group_vars(double), c("cyl", "am"))
 })
+
+test_that("Non-standard column names are respected", {
+
+    ## Test the mutate
+    df <- DataFrame(i = sample.int(2, 20, replace = TRUE)) |>
+        mutate(
+            `my pet` = c("dog", "cat")[i],
+            size = rep(c("big", "small"), each = 10),
+            weight = abs(rnorm(20))
+        )
+    expect_true("my pet" %in% colnames(df))
+    ## Grouping
+    df_grp <- group_by(df, `my pet`, size)
+    expect_true(all(c("my pet", "size") %in% colnames(group_data(df_grp))[1:2]))
+    ## Group counting with no extra columns
+    df_cnt <- count(df_grp)
+    expect_true(all(c("my pet", "size", "n") %in% colnames(df_cnt)))
+    expect_true(c("my pet") %in% colnames(group_data(df_cnt)))
+    expect_true(!c("size") %in% colnames(group_data(df_cnt)))
+    ## Group counting with extra columns
+    df_cnt <- count(df_grp, i)
+    expect_true(all(c("my pet", "size", "i", "n") %in% colnames(df_cnt)))
+    expect_true(c("my pet") %in% colnames(group_data(df_cnt)))
+    expect_true(!c("size") %in% colnames(group_data(df_cnt)))
+    ## Check wt implementation
+    df_wt <- count(df, `my pet`, wt = "weight")
+    expect_true(all(c("my pet", "n") %in% colnames(df_wt)))
+    expect_true(is.double(df_wt$n))
+    df_wt <- count(df_grp, i, wt = "weight")
+    expect_true(all(c("my pet", "size", "i", "n") %in% colnames(df_cnt)))
+
+    ## Check summarise
+    wt_df <- summarise(df_grp, weight = mean(weight))
+    expect_true(all(c("my pet", "size", "weight") %in% colnames(wt_df)))
+
+
+})
