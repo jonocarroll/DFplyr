@@ -120,8 +120,9 @@ select.DataFrame <- function(.data, ...) {
     .data <- base::subset(.data,
         select = unlist(lapply(
             rlang::quos(...),
-            function(x) {
-                rlang::eval_tidy(rlang::quo_squash(x))
+            function(.x) {
+                ## Using 'x' here is problematic if there's a column called 'x'
+                rlang::eval_tidy(rlang::quo_squash(.x))
             })))
     if (any(dotnames != "")) {
         non_empty <- which(dotnames != "")
@@ -164,7 +165,7 @@ rename2 <- function(.data, ...) {
 }
 
 #' @inherit dplyr::count
-#' @importFrom rlang quos quo_squash enquo
+#' @importFrom rlang quos quo_squash enquo !! !!! sym
 #' @export
 count.DataFrame <- function(x,
     ...,
@@ -183,36 +184,106 @@ count.DataFrame <- function(x,
         ))
     }
 
+    ## Implement the wt argument for DataFrame objects
+    ## This will currently error if an unquoted column name is passed
+    ## TODO: Fix handling of unquoted column names
+    if (!is.null(wt)) {
+        wt <- match.arg(wt, colnames(x))
+        stopifnot(is.numeric(x[[wt]]))
+    }
     groupvars <- group_vars(x)
+    drop_groupvars <- groupvars
+    if (.drop) drop_groupvars <- groupvars[-length(groupvars)]
     EXPRS <- lapply(rlang::quos(...), function(x) {
         rlang::quo_squash(x)
     })
     if (length(groupvars) > 0L) {
         groups <- group_data(x)
         if (!length(EXPRS)) {
-            RET <- select(mutate(groups,
-                n = lengths(.data[[".rows"]])), -".rows")
-            names(RET)[ncol(RET)] <- name
-            RET <- RET[RET[[name]] != 0, ]
-            return(methods::as(RET, "DataFrame"))
+            if (is.null(wt)) { ## Handle summing the wt column
+                n <- vapply(groups[[".rows"]], length, integer(1))
+            } else {
+                n <- vapply(groups[[".rows"]], \(i) sum(x[[wt]][i]), numeric(1))
+            }
+            RET <- select(groups, -".rows")
+            RET[[name]] <- n
+            nm <- names(RET)
+            RET <- methods::as(RET, "DataFrame")
+            names(RET) <- nm
+
+        } else {
+
+            ## This process retains & respects all original column names
+            split_data <- lapply(
+                seq_len(nrow(groups)),
+                \(xx) {
+                    ## Using lapply ensures a list not a vector, which can easily
+                    ## be coerced to a data.frame. Sometimes choosing a single
+                    ## column will be coerced to a vector, e.g. x[1,1] which
+                    ## leads to unexpected output structures
+                    grp_subset <- lapply(groups[-ncol(groups)], \(y) y[xx])
+                    cbind(
+                        as.data.frame(grp_subset, check.names = FALSE),
+                        .count_internal(x[groups$.rows[[xx]],], EXPRS, wt)
+                    )
+                }
+            )
+            nm <- colnames(split_data[[1]])
+            RET <- methods::as(do.call(rbind, split_data), "DataFrame")
         }
-        split_data <- lapply(seq_len(nrow(groups)), function(xx) {
-            .data_grp <- x[groups$.rows[xx][[1]], , drop = FALSE]
-            tbl_grp <- with(.data_grp, do.call(table, EXPRS))
-            cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
-        })
-        RET <- methods::as(do.call(rbind, split_data), "DataFrame")
+
+        ## I assume we want groups maintained in the output?
+        RET <- group_by(RET, !!!rlang::syms(drop_groupvars), .drop = .drop) # Restore groups
+
+        ## The original code
+        # split_data <- lapply(seq_len(nrow(groups)), function(xx) {
+        #     .data_grp <- x[groups$.rows[xx][[1]], , drop = FALSE]
+        #     tbl_grp <- with(.data_grp, do.call(table, EXPRS))
+        #     cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
+        # })
+        # RET <- methods::as(do.call(rbind, split_data), "DataFrame")
+
     } else {
-        RET <- methods::as(with(x, do.call(table, EXPRS)), "DataFrame")
+
+
+        ## The previous approach which will:
+        ## 1. Not respect column names
+        ## 2. Coerce columns to different data types (e.g. factor, Rle etc)
+        # RET <- methods::as(with(x, do.call(table, EXPRS)), "DataFrame")
+        RET <- .count_internal(x, EXPRS, wt)
+
     }
 
     names(RET)[ncol(RET)] <- name
     RET <- RET[RET[[name]] != 0, ]
-    RET <- RET[with(RET, do.call(order, EXPRS)), ]
+    # if (length(EXPRS)) RET <- RET[with(RET, do.call(order, EXPRS)), ]
+    ## Is this needed or useful? seems better than the above but maybe I misunderstood
+    if (sort) RET <- arrange(RET, desc(!!sym(name)))
 
     RET
 }
 
+#' @importFrom rlang !!!
+.count_internal <- function(x, EXPRS, wt) {
+    x <- ungroup(x)
+    ## Avoid the existing do.call by forming a list & retaining the names
+    x_as_list <- as.list(select(x, !!!rlang::syms(EXPRS)))
+    nm <- names(x_as_list)
+    if (is.null(wt)) {
+        RET <- methods::as(table(x_as_list), "DataFrame")
+        names(RET)[-ncol(RET)] <- nm # Restore original names
+        ## The call to table will coerce to factors, Rle & other unexpected classes
+        ## Return them back to their original type
+        RET[nm] <- lapply(nm, \(i) methods::as(RET[[i]], class(x_as_list[[i]])))
+    } else {
+        x_grouped <- group_by(x, !!!rlang::syms(EXPRS))
+        nm <- vapply(EXPRS, as.character, character(1))
+        RET <- summarise(x_grouped, n = sum(!!sym(wt)))
+        names(RET)[-ncol(RET)] <- nm
+    }
+    RET
+
+}
 
 #' @inherit dplyr::group_by_drop_default
 #' @export
@@ -240,20 +311,37 @@ summarise.DataFrame <- function(.data, ...) {
 
     if (length(groupvars) > 0L) {
         groups <- group_data(.data)
-        split_data <- lapply(seq_len(nrow(groups)), function(xx) {
-            .data_grp <- .data[groups$.rows[xx][[1]], , drop = FALSE]
-            tbl_grp <- lapply(FNS, function(xx) {
-                with(.data_grp, rlang::eval_tidy(xx))
-            })
-            cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
-        })
+        split_data <- lapply(
+            seq_len(nrow(groups)),
+            \(i) {
+                .data_grp <- .data[groups$.rows[i][[1]], , drop = FALSE]
+                tbl_grp <- lapply(FNS, \(f) with(.data_grp, rlang::eval_tidy(f)))
+                grp_list <- lapply(groups[-ncol(groups)], \(y) y[i])
+                cbind(
+                    as.data.frame(grp_list, check.names = FALSE),
+                    as.data.frame(tbl_grp, check.names = FALSE)
+                )
+            }
+        )
+
+        ## The original code will produce strange column names if there is only
+        ## one group
+        # split_data <- lapply(seq_len(nrow(groups)), function(xx) {
+        #     .data_grp <- .data[groups$.rows[xx][[1]], , drop = FALSE]
+        #     tbl_grp <- lapply(FNS, function(xx) {
+        #         with(.data_grp, rlang::eval_tidy(xx))
+        #     })
+        #     cbind(groups[xx, -ncol(groups)], methods::as(tbl_grp, "DataFrame"))
+        # })
         RET <- do.call(rbind, split_data)
     } else {
         RET <- lapply(FNS, function(xx) {
             with(.data, eval(xx))
         })
     }
+    nm <- names(RET)
     RET <- methods::as(RET, "DataFrame")
+    colnames(RET) <- nm
     RET
 }
 
@@ -267,7 +355,8 @@ summarize.DataFrame <- summarise.DataFrame
 #' @export
 group_data.DataFrame <- function(.data) {
     group_attr <- get_group_data(.data)
-    if (!is.null(group_attr) && nrow(group_attr) > 1L) {
+    # if (!is.null(group_attr) && nrow(group_attr) > 1L) {
+    if (!is.null(group_attr) && nrow(group_attr) >= 1L) {
         group_attr
     } else {
         rows <- list(seq_len(nrow(.data)))
@@ -314,16 +403,20 @@ group_by.DataFrame <- function(.data,
             }
         }
         uniques <- unique(select(.data, !!!rlang::syms(unlist(groupvars))))
-        i <- nrow(.data)
+        .nr <- nrow(.data) # This needs to not match an existing column
         flagged <- S4Vectors::merge(
-            mutate(.data, rowid = seq_len(i)),
+            mutate(.data, rowid = seq_len(.nr)),
             # mutate(.data, rowid = seq_len(nrow(.data))),
             mutate(uniques, flag = seq_len(nrow(uniques))),
             by = unlist(groupvars),
             sort = FALSE
         )
         groups <- split(as.integer(flagged$rowid), flagged$flag)
-        uniques <- as.data.frame(uniques)
+
+        ## Enforce respecting colnames after the call to as.data.frame
+        ## Setting optional = TRUE may less safe though, but explicitly
+        ## setting check.names = FALSE is not implemented
+        uniques <- as.data.frame(uniques, optional = TRUE)
         uniques$.rows <- unname(groups)
         groupdata <- uniques[with(uniques,
                 do.call(order, rlang::syms(groupvars))), ]
@@ -562,7 +655,7 @@ tally.DataFrame <- function(x,
 
 #' @importFrom rlang enquo quo_get_expr warn quo_is_null expr
 #' @keywords internal
-.tally_n <- function(x, wt, name) {
+.tally_n <- function(x, wt, name, sort = FALSE) {
     wt <- rlang::enquo(wt)
     if (rlang::is_call(rlang::quo_get_expr(wt), "n", n = 0)) {
         rlang::warn(

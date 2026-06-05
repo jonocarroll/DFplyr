@@ -1,3 +1,12 @@
+# DFplyr 1.x.x
+
+NEW FEATURES
+
+* summarise, count, mutate can handle non-standard column names
+* mutate can refer to previous columns within the same call to mutate
+* GroupedDataFrame is valid for 1 group with 1 value, and above
+* wt and sort enabled for count
+
 # DFplyr 1.6.0
 
 NEW FEATURES
