@@ -1,4 +1,4 @@
-# DFplyr 1.x.x
+# DFplyr 1.7.0
 
 NEW FEATURES
 
