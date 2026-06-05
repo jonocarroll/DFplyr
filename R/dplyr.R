@@ -355,8 +355,7 @@ summarize.DataFrame <- summarise.DataFrame
 #' @export
 group_data.DataFrame <- function(.data) {
     group_attr <- get_group_data(.data)
-    # if (!is.null(group_attr) && nrow(group_attr) > 1L) {
-    if (!is.null(group_attr) && nrow(group_attr) >= 1L) {
+    if (!is.null(group_attr) && nrow(group_attr) > 0L) {
         group_attr
     } else {
         rows <- list(seq_len(nrow(.data)))
