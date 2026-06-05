@@ -1,3 +1,13 @@
+# DFplyr 1.7.0
+
+NEW FEATURES
+
+* summarise, count, mutate can handle non-standard column names (#26, @smped)
+* mutate can refer to previous columns within the same call to mutate (#26, @smped)
+* GroupedDataFrame is valid for 1 group with 1 value, and above (#26, @smped)
+* wt and sort enabled for count (#26, @smped)
+* Explicit dependency on R >= 4.1 (due to use of `|>`)
+
 # DFplyr 1.6.0
 
 NEW FEATURES
