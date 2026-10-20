@@ -7,7 +7,7 @@
 \method{group_data}{DataFrame}(.data)
 }
 \arguments{
-\item{.data}{a \code{\link[S4Vectors:DataFrame-class]{S4Vectors::DataFrame()}}}
+\item{.data}{a \code{\link[S4Vectors:DataFrame]{S4Vectors::DataFrame()}}}
 }
 \value{
 a \code{data.frame} of group data

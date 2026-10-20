@@ -11,7 +11,7 @@ set_group_data(x, g, .drop = group_by_drop_default(x))
 get_group_data(x)
 }
 \arguments{
-\item{x}{A \link[S4Vectors:DataFrame-class]{S4Vectors::DataFrame} on which to set group data.}
+\item{x}{A \link[S4Vectors:DataFrame]{S4Vectors::DataFrame} on which to set group data.}
 
 \item{g}{Group data (a \code{data.frame}).}
 
