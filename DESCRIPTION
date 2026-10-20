@@ -1,6 +1,6 @@
 Package: DFplyr
 Title: A `DataFrame` (`S4Vectors`) backend for `dplyr`
-Version: 1.7.1
+Version: 1.7.2
 Authors@R: c(person("Jonathan", "Carroll", 
     email = "rpkg@jcarroll.com.au", 
     role = c("aut", "cre"), 
@@ -15,7 +15,6 @@ Description: Provides `dplyr` verbs (`mutate`, `select`, `filter`, etc...)
 biocViews: DataRepresentation, Infrastructure, Software
 License: GPL-3
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 URL: https://github.com/jonocarroll/DFplyr
 BugReports: https://github.com/jonocarroll/DFplyr/issues
 Depends: 
@@ -40,3 +39,4 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.1.0

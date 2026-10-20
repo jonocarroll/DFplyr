@@ -1,11 +1,5 @@
 utils::globalVariables(c(".data", ":="))
 
-#' @inherit base::format
-#' @export
-format.DataFrame <- function(x, ...) {
-    x
-}
-
 #' @inherit dplyr::filter
 #' @importFrom rlang quos eval_tidy
 #' @export
